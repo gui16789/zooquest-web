@@ -45,12 +45,50 @@ export async function POST(req: Request) {
     runId: run.runId,
     unitId: run.unitId,
     seed: run.seed,
-    questions: run.questions.map((q) => ({
-      questionId: q.questionId,
-      type: q.type,
-      prompt: q.prompt,
-      hanzi: q.hanzi,
-      choices: q.choices,
-    })),
+    questions: run.questions.map((q) => {
+      switch (q.type) {
+        case "mcq_pinyin":
+          return {
+            questionId: q.questionId,
+            type: q.type,
+            prompt: q.prompt,
+            hanzi: q.hanzi,
+            choices: q.choices,
+          };
+        case "mcq_hanzi_by_pinyin":
+          return {
+            questionId: q.questionId,
+            type: q.type,
+            prompt: q.prompt,
+            pinyin: q.pinyin,
+            choices: q.choices,
+          };
+        case "mcq_polyphone":
+          return {
+            questionId: q.questionId,
+            type: q.type,
+            prompt: q.prompt,
+            hanzi: q.hanzi,
+            example: q.example,
+            choices: q.choices,
+          };
+        case "mcq_syn_ant":
+          return {
+            questionId: q.questionId,
+            type: q.type,
+            prompt: q.prompt,
+            choices: q.choices,
+          };
+        case "sentence_pattern_fill":
+          return {
+            questionId: q.questionId,
+            type: q.type,
+            prompt: q.prompt,
+            template: q.template,
+            slots: q.slots,
+            wordBank: q.wordBank,
+          };
+      }
+    }),
   });
 }
