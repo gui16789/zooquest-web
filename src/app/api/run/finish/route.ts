@@ -7,6 +7,7 @@ import { getContent } from "@/infra/content/localContent";
 import { generateRun } from "@/domain/questions/generate";
 import { gradeRun } from "@/domain/questions/grade";
 import { computeBadgeAwards } from "@/domain/badges/rules";
+import { scoreToStars } from "@/domain/scoring/stars";
 
 const bodySchema = z.object({
   runId: z.string().uuid(),
@@ -14,6 +15,7 @@ const bodySchema = z.object({
     z.object({
       questionId: z.string().min(1),
       choice: z.string().min(1),
+      payload: z.unknown().optional(),
     }),
   ),
 });
@@ -54,7 +56,8 @@ export async function POST(req: Request) {
   });
 
   const result = gradeRun(run.questions, parsed.data.answers);
-  const passed = result.score >= 80;
+  const stars = scoreToStars(result.score);
+  const passed = stars >= 2;
 
   // Update aggregated level progress
   const { data: existingProgress, error: progressSelectError } = await supabase
@@ -67,7 +70,7 @@ export async function POST(req: Request) {
   if (progressSelectError) return jsonError(`DB_ERROR:${progressSelectError.message}`, 500);
 
   const nextAttempts = (existingProgress?.attempts as number | undefined ?? 0) + 1;
-  const nextFails = (existingProgress?.fails as number | undefined ?? 0) + (passed ? 0 : 1);
+  const nextFails = (existingProgress?.fails as number | undefined ?? 0) + (stars >= 2 ? 0 : 1);
   const nextBestScore = Math.max(
     existingProgress?.best_score as number | undefined ?? 0,
     result.score,
@@ -119,6 +122,7 @@ export async function POST(req: Request) {
     return jsonOk({
       unitId,
       passed,
+      stars,
       score: result.score,
       correct: result.correct,
       total: result.total,
@@ -131,6 +135,7 @@ export async function POST(req: Request) {
   return jsonOk({
     unitId,
     passed,
+    stars,
     score: result.score,
     correct: result.correct,
     total: result.total,
