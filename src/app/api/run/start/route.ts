@@ -37,8 +37,10 @@ export async function POST(req: Request) {
     unitId: parsed.data.unitId,
     seed,
     runId,
-    questionCount: 10,
+    questionCount: 5,
     choiceCount: 4,
+    mix: { t1: 2, t2: 2, t3: 1 },
+    shuffleQuestions: false,
   });
 
   return jsonOk({

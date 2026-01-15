@@ -55,8 +55,10 @@ export async function POST(req: Request) {
     unitId,
     seed,
     runId: parsed.data.runId,
-    questionCount: 10,
+    questionCount: 5,
     choiceCount: 4,
+    mix: { t1: 2, t2: 2, t3: 1 },
+    shuffleQuestions: false,
   });
 
   const result = gradeRun(run.questions, parsed.data.answers);
