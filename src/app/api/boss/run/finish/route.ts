@@ -1,0 +1,102 @@
+import { z } from "zod";
+
+import { jsonError, jsonOk } from "@/lib/api";
+import { getAuthedUser } from "@/infra/auth/session";
+import { getSupabaseAdmin } from "@/infra/supabaseAdmin";
+import { getContent } from "@/infra/content/localContent";
+import { generateBossRun } from "@/domain/boss/generate";
+import { gradeBossRun } from "@/domain/boss/grade";
+import { scoreToStars } from "@/domain/scoring/stars";
+
+const bodySchema = z.object({
+  runId: z.string().uuid(),
+  answers: z.array(
+    z.object({
+      questionId: z.string().min(1),
+      choice: z.string().min(1),
+    }),
+  ),
+});
+
+export async function POST(req: Request) {
+  const user = await getAuthedUser();
+  if (!user) return jsonError("UNAUTHORIZED", 401);
+
+  const parsed = bodySchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return jsonError("INVALID_INPUT", 400);
+
+  const supabase = getSupabaseAdmin();
+
+  const { data: runRow, error: runError } = await supabase
+    .from("quiz_runs")
+    .select("id, unit_id, seed, expires_at")
+    .eq("id", parsed.data.runId)
+    .eq("kid_user_id", user.kidUserId)
+    .maybeSingle();
+
+  if (runError) return jsonError(`DB_ERROR:${runError.message}`, 500);
+  if (!runRow) return jsonError("RUN_NOT_FOUND", 404);
+
+  if (new Date(runRow.expires_at as string).getTime() <= Date.now()) {
+    await supabase.from("quiz_runs").delete().eq("id", parsed.data.runId);
+    return jsonError("RUN_EXPIRED", 410);
+  }
+
+  const levelId = runRow.unit_id as string;
+  if (!levelId.endsWith("_boss")) return jsonError("INVALID_RUN", 400);
+
+  const unitId = levelId.replace(/_boss$/, "");
+  const seed = runRow.seed as number;
+
+  const run = generateBossRun(getContent(), {
+    unitId,
+    seed,
+    runId: parsed.data.runId,
+    questionCount: 6,
+  });
+
+  const result = gradeBossRun(run.questions, parsed.data.answers);
+  const stars = scoreToStars(result.score);
+  const passed = stars >= 2;
+
+  const { data: existingProgress, error: progressSelectError } = await supabase
+    .from("level_progress")
+    .select("best_score, attempts, fails")
+    .eq("kid_user_id", user.kidUserId)
+    .eq("level_id", levelId)
+    .maybeSingle();
+
+  if (progressSelectError) return jsonError(`DB_ERROR:${progressSelectError.message}`, 500);
+
+  const nextAttempts = (existingProgress?.attempts as number | undefined ?? 0) + 1;
+  const nextFails = (existingProgress?.fails as number | undefined ?? 0) + (passed ? 0 : 1);
+  const nextBestScore = Math.max(
+    existingProgress?.best_score as number | undefined ?? 0,
+    result.score,
+  );
+
+  const { error: progressUpsertError } = await supabase.from("level_progress").upsert({
+    kid_user_id: user.kidUserId,
+    level_id: levelId,
+    best_score: nextBestScore,
+    attempts: nextAttempts,
+    fails: nextFails,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (progressUpsertError) return jsonError(`DB_ERROR:${progressUpsertError.message}`, 500);
+
+  await supabase.from("quiz_runs").delete().eq("id", parsed.data.runId);
+
+  // Badges will be handled in Issue #4 to keep concerns separated.
+  return jsonOk({
+    unitId,
+    mode: "boss",
+    passed,
+    stars,
+    score: result.score,
+    correct: result.correct,
+    total: result.total,
+    newBadges: [],
+  });
+}
