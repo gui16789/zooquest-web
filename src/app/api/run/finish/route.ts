@@ -7,6 +7,7 @@ import { getContent } from "@/infra/content/localContent";
 import { generateRun } from "@/domain/questions/generate";
 import { gradeRun } from "@/domain/questions/grade";
 import { computeBadgeAwards } from "@/domain/badges/rules";
+import { isUnitId } from "@/domain/badges/types";
 import { scoreToStars } from "@/domain/scoring/stars";
 
 const bodySchema = z.object({
@@ -44,7 +45,10 @@ export async function POST(req: Request) {
     return jsonError("RUN_EXPIRED", 410);
   }
 
-  const unitId = runRow.unit_id as string;
+  const unitIdRaw = runRow.unit_id as string;
+  if (!isUnitId(unitIdRaw)) return jsonError("INVALID_UNIT", 400);
+
+  const unitId = unitIdRaw;
   const seed = runRow.seed as number;
 
   const run = generateRun(getContent(), {
@@ -100,7 +104,12 @@ export async function POST(req: Request) {
     0,
   );
 
-  const awards = computeBadgeAwards({ unitId, passed, totalFailsAllUnits });
+  const awards = computeBadgeAwards({
+    unitId,
+    mode: "regular",
+    stars,
+    totalFailsAllUnits,
+  });
 
   if (awards.length > 0) {
     const { data: inserted, error: badgeError } = await supabase

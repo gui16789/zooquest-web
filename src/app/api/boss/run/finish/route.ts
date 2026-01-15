@@ -6,6 +6,8 @@ import { getSupabaseAdmin } from "@/infra/supabaseAdmin";
 import { getContent } from "@/infra/content/localContent";
 import { generateBossRun } from "@/domain/boss/generate";
 import { gradeBossRun } from "@/domain/boss/grade";
+import { computeBadgeAwards } from "@/domain/badges/rules";
+import { isUnitId } from "@/domain/badges/types";
 import { scoreToStars } from "@/domain/scoring/stars";
 
 const bodySchema = z.object({
@@ -45,7 +47,10 @@ export async function POST(req: Request) {
   const levelId = runRow.unit_id as string;
   if (!levelId.endsWith("_boss")) return jsonError("INVALID_RUN", 400);
 
-  const unitId = levelId.replace(/_boss$/, "");
+  const unitIdRaw = levelId.replace(/_boss$/, "");
+  if (!isUnitId(unitIdRaw)) return jsonError("INVALID_UNIT", 400);
+
+  const unitId = unitIdRaw;
   const seed = runRow.seed as number;
 
   const run = generateBossRun(getContent(), {
@@ -86,9 +91,46 @@ export async function POST(req: Request) {
 
   if (progressUpsertError) return jsonError(`DB_ERROR:${progressUpsertError.message}`, 500);
 
+  // Calculate total fails across all units (regular + boss)
+  const { data: allProgress, error: allProgressError } = await supabase
+    .from("level_progress")
+    .select("fails")
+    .eq("kid_user_id", user.kidUserId);
+
+  if (allProgressError) return jsonError(`DB_ERROR:${allProgressError.message}`, 500);
+
+  const totalFailsAllUnits = (allProgress ?? []).reduce(
+    (sum, row) => sum + ((row.fails as number) ?? 0),
+    0,
+  );
+
+  const awards = computeBadgeAwards({
+    unitId,
+    mode: "boss",
+    stars,
+    totalFailsAllUnits,
+  });
+
+  let newBadges: string[] = [];
+  if (awards.length > 0) {
+    const { data: inserted, error: badgeError } = await supabase
+      .from("badge_awards")
+      .upsert(
+        awards.map((a) => ({
+          kid_user_id: user.kidUserId,
+          badge_id: a.badgeId,
+          reason_event: a.reasonEvent,
+        })),
+        { onConflict: "kid_user_id,badge_id" },
+      )
+      .select("badge_id");
+
+    if (badgeError) return jsonError(`DB_ERROR:${badgeError.message}`, 500);
+    newBadges = (inserted ?? []).map((x) => x.badge_id as string);
+  }
+
   await supabase.from("quiz_runs").delete().eq("id", parsed.data.runId);
 
-  // Badges will be handled in Issue #4 to keep concerns separated.
   return jsonOk({
     unitId,
     mode: "boss",
@@ -97,6 +139,6 @@ export async function POST(req: Request) {
     score: result.score,
     correct: result.correct,
     total: result.total,
-    newBadges: [],
+    newBadges,
   });
 }

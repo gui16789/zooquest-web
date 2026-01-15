@@ -1,28 +1,36 @@
-import type { BadgeAward, BadgeContext, BadgeId } from "@/domain/badges/types";
+import type { BadgeAward, BadgeContext, BadgeId, UnitId } from "@/domain/badges/types";
 
-const UNIT_CLEAR_BADGES: Record<string, BadgeId> = {
-  u1: "clear_u1",
-  u2: "clear_u2",
-  u3: "clear_u3",
-  u4: "clear_u4",
-  u5: "clear_u5",
-  u6: "clear_u6",
-  u7: "clear_u7",
-  u8: "clear_u8",
-};
+function clearBadgeId(unitId: UnitId): BadgeId {
+  return `clear_${unitId}`;
+}
+
+function star3BadgeId(unitId: UnitId): BadgeId {
+  return `star3_${unitId}`;
+}
+
+function bossClearBadgeId(unitId: UnitId): BadgeId {
+  return `boss_${unitId}_clear`;
+}
+
+function bossStar3BadgeId(unitId: UnitId): BadgeId {
+  return `boss_${unitId}_star3`;
+}
 
 export function computeBadgeAwards(ctx: BadgeContext): BadgeAward[] {
   const awards: BadgeAward[] = [];
 
-  if (ctx.passed) {
-    const clearBadge = UNIT_CLEAR_BADGES[ctx.unitId];
-    if (clearBadge) awards.push({ badgeId: clearBadge, reasonEvent: "RUN_PASSED" });
+  if (ctx.mode === "regular") {
+    if (ctx.stars >= 2) awards.push({ badgeId: clearBadgeId(ctx.unitId), reasonEvent: "REGULAR_CLEAR" });
+    if (ctx.stars === 3) awards.push({ badgeId: star3BadgeId(ctx.unitId), reasonEvent: "REGULAR_STAR3" });
+  } else {
+    if (ctx.stars >= 2) awards.push({ badgeId: bossClearBadgeId(ctx.unitId), reasonEvent: "BOSS_CLEAR" });
+    if (ctx.stars === 3) awards.push({ badgeId: bossStar3BadgeId(ctx.unitId), reasonEvent: "BOSS_STAR3" });
   }
 
   if (ctx.totalFailsAllUnits >= 10) {
-    awards.push({ badgeId: "persistence_10fails", reasonEvent: "FAILS_TOTAL_10" });
+    awards.push({ badgeId: "persistence_fails_10", reasonEvent: "FAILS_TOTAL_10" });
   } else if (ctx.totalFailsAllUnits >= 5) {
-    awards.push({ badgeId: "persistence_5fails", reasonEvent: "FAILS_TOTAL_5" });
+    awards.push({ badgeId: "persistence_fails_5", reasonEvent: "FAILS_TOTAL_5" });
   }
 
   return awards;
