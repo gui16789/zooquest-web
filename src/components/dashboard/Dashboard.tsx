@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { getBadgeMeta } from "@/domain/badges/catalog";
 import { LEVELS } from "@/domain/levels/levels";
 import { computeLevelState } from "@/domain/levels/state";
 
@@ -169,12 +170,34 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
           <div className="text-sm text-zinc-600">还没有勋章，先去闯一关吧。</div>
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {badges.slice(0, 8).map((b) => (
-              <div key={b.badge_id} className="rounded-md border border-zinc-200 bg-white p-3">
-                <div className="text-sm font-medium">{b.badge_id}</div>
-                <div className="text-xs text-zinc-600">{new Date(b.awarded_at).toLocaleString()}</div>
-              </div>
-            ))}
+            {badges.slice(0, 8).map((b) => {
+              const meta = getBadgeMeta(b.badge_id);
+              return (
+                <div key={b.badge_id} className="rounded-md border border-zinc-200 bg-white p-3">
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={meta.assetPath}
+                      alt={meta.name}
+                      className="h-10 w-10 shrink-0 rounded bg-zinc-50 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = meta.fallbackAssetPath;
+                      }}
+                    />
+
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-black">{meta.name}</div>
+                      {meta.description ? (
+                        <div className="mt-1 text-xs text-zinc-600">{meta.description}</div>
+                      ) : null}
+                      <div className="mt-2 text-xs text-zinc-600">
+                        {new Date(b.awarded_at).toLocaleString()}
+                      </div>
+                      <div className="mt-1 text-[10px] text-zinc-400">{meta.badgeId}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
