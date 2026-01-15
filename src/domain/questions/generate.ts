@@ -28,6 +28,8 @@ export type GenerateRunOptions = {
     t2: number;
     t3: number;
   };
+  // For stage-based runs, keep order stable.
+  shuffleQuestions?: boolean;
 };
 
 export function generateRun(content: ContentSchemaV1, options: GenerateRunOptions): QuizRun {
@@ -114,11 +116,10 @@ export function generateRun(content: ContentSchemaV1, options: GenerateRunOption
     questions.push(buildSentencePatternFill(pattern, rng, questions.length));
   }
 
-  // Shuffle question order within the run.
-  const shuffled = rng.shuffle(questions);
+  const ordered = options.shuffleQuestions === false ? questions : rng.shuffle(questions);
 
   // Reassign questionIds to match final order.
-  const normalized = shuffled.map((q, index) => ({
+  const normalized = ordered.map((q, index) => ({
     ...q,
     questionId: `${options.runId}:${index + 1}`,
   }));
