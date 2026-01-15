@@ -9,7 +9,7 @@ import { getContent } from "@/infra/content/localContent";
 import { generateRun } from "@/domain/questions/generate";
 
 const bodySchema = z.object({
-  unitId: z.string().min(1).max(16),
+  unitId: z.string().regex(/^u[1-8]$/),
 });
 
 export async function POST(req: Request) {

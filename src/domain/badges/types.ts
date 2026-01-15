@@ -1,14 +1,12 @@
+export type UnitId = `u${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8}`;
+
 export type BadgeId =
-  | "clear_u1"
-  | "clear_u2"
-  | "clear_u3"
-  | "clear_u4"
-  | "clear_u5"
-  | "clear_u6"
-  | "clear_u7"
-  | "clear_u8"
-  | "persistence_5fails"
-  | "persistence_10fails";
+  | `clear_${UnitId}`
+  | `star3_${UnitId}`
+  | `boss_${UnitId}_clear`
+  | `boss_${UnitId}_star3`
+  | "persistence_fails_5"
+  | "persistence_fails_10";
 
 export type BadgeAward = {
   badgeId: BadgeId;
@@ -16,7 +14,12 @@ export type BadgeAward = {
 };
 
 export type BadgeContext = {
-  unitId: string;
-  passed: boolean;
+  unitId: UnitId;
+  mode: "regular" | "boss";
+  stars: 0 | 1 | 2 | 3;
   totalFailsAllUnits: number;
 };
+
+export function isUnitId(value: string): value is UnitId {
+  return /^u[1-8]$/.test(value);
+}
