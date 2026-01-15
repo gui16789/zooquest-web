@@ -37,6 +37,7 @@ export function generateRun(content: ContentSchemaV1, options: GenerateRunOption
   const rng = createRng(options.seed);
 
 
+
   const charItems: CharItem[] = unit.sections.flatMap((s) => {
     if (s.type !== "char_table") return [];
     return s.items;
