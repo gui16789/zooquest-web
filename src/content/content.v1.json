@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "subject": "chinese",
+  "grade": 2,
+  "term": "up",
+  "units": [
+    {
+      "unitId": "u1",
+      "title": "第一单元",
+      "sections": [
+        {
+          "sectionId": "u1.s1",
+          "type": "char_table",
+          "title": "识字表",
+          "items": [
+            { "itemId": "u1.s1.0001", "hanzi": "蝌", "pinyin": "kē", "words": ["蝌蚪"] },
+            { "itemId": "u1.s1.0002", "hanzi": "蚪", "pinyin": "dǒu", "words": ["蝌蚪"] },
+            { "itemId": "u1.s1.0003", "hanzi": "脑", "pinyin": "nǎo", "words": ["大脑", "脑子"] },
+            { "itemId": "u1.s1.0004", "hanzi": "袋", "pinyin": "dài", "words": ["麻袋", "袋子"] },
+            { "itemId": "u1.s1.0005", "hanzi": "灰", "pinyin": "huī", "words": ["灰色", "石灰"] },
+            { "itemId": "u1.s1.0006", "hanzi": "甩", "pinyin": "shuǎi", "words": ["甩动", "甩卖"] },
+            { "itemId": "u1.s1.0007", "hanzi": "活", "pinyin": "huó", "words": ["活力", "生活"] },
+            { "itemId": "u1.s1.0008", "hanzi": "腿", "pinyin": "tuǐ", "words": ["腿脚", "火腿"] },
+            { "itemId": "u1.s1.0009", "hanzi": "迎", "pinyin": "yíng", "words": ["迎接", "欢迎"] },
+            { "itemId": "u1.s1.0010", "hanzi": "龟", "pinyin": "guī", "words": ["乌龟", "海龟"] },
+            { "itemId": "u1.s1.0011", "hanzi": "帕", "pinyin": "pà", "words": ["手帕"] },
+            { "itemId": "u1.s1.0012", "hanzi": "登", "pinyin": "dēng", "words": ["登山", "登记"] }
+          ]
+        }
+      ]
+    },
+    {
+      "unitId": "u2",
+      "title": "第二单元",
+      "sections": [
+        {
+          "sectionId": "u2.s1",
+          "type": "char_table",
+          "title": "识字表（占位）",
+          "items": [
+            { "itemId": "u2.s1.0001", "hanzi": "山", "pinyin": "shān", "words": ["大山"] },
+            { "itemId": "u2.s1.0002", "hanzi": "水", "pinyin": "shuǐ", "words": ["河水"] },
+            { "itemId": "u2.s1.0003", "hanzi": "花", "pinyin": "huā", "words": ["花朵"] },
+            { "itemId": "u2.s1.0004", "hanzi": "风", "pinyin": "fēng", "words": ["大风"] },
+            { "itemId": "u2.s1.0005", "hanzi": "雨", "pinyin": "yǔ", "words": ["下雨"] },
+            { "itemId": "u2.s1.0006", "hanzi": "云", "pinyin": "yún", "words": ["白云"] },
+            { "itemId": "u2.s1.0007", "hanzi": "鸟", "pinyin": "niǎo", "words": ["小鸟"] },
+            { "itemId": "u2.s1.0008", "hanzi": "鱼", "pinyin": "yú", "words": ["小鱼"] },
+            { "itemId": "u2.s1.0009", "hanzi": "星", "pinyin": "xīng", "words": ["星星"] },
+            { "itemId": "u2.s1.0010", "hanzi": "月", "pinyin": "yuè", "words": ["月亮"] },
+            { "itemId": "u2.s1.0011", "hanzi": "日", "pinyin": "rì", "words": ["日子"] },
+            { "itemId": "u2.s1.0012", "hanzi": "光", "pinyin": "guāng", "words": ["阳光"] }
+          ]
+        }
+      ]
+    }
+  ]
+}

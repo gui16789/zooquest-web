@@ -1,0 +1,56 @@
+import crypto from "node:crypto";
+
+import { z } from "zod";
+
+import { jsonError, jsonOk } from "@/lib/api";
+import { getAuthedUser } from "@/infra/auth/session";
+import { getSupabaseAdmin } from "@/infra/supabaseAdmin";
+import { getContent } from "@/infra/content/localContent";
+import { generateRun } from "@/domain/questions/generate";
+
+const bodySchema = z.object({
+  unitId: z.string().min(1).max(16),
+});
+
+export async function POST(req: Request) {
+  const user = await getAuthedUser();
+  if (!user) return jsonError("UNAUTHORIZED", 401);
+
+  const parsed = bodySchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return jsonError("INVALID_INPUT", 400);
+
+  const runId = crypto.randomUUID();
+  const seed = crypto.randomInt(1, 2 ** 31 - 1);
+
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.from("quiz_runs").insert({
+    id: runId,
+    kid_user_id: user.kidUserId,
+    unit_id: parsed.data.unitId,
+    seed,
+    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  });
+
+  if (error) return jsonError(`DB_ERROR:${error.message}`, 500);
+
+  const run = generateRun(getContent(), {
+    unitId: parsed.data.unitId,
+    seed,
+    runId,
+    questionCount: 10,
+    choiceCount: 4,
+  });
+
+  return jsonOk({
+    runId: run.runId,
+    unitId: run.unitId,
+    seed: run.seed,
+    questions: run.questions.map((q) => ({
+      questionId: q.questionId,
+      type: q.type,
+      prompt: q.prompt,
+      hanzi: q.hanzi,
+      choices: q.choices,
+    })),
+  });
+}
