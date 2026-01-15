@@ -17,9 +17,10 @@ export function generateRun(
   const unit = content.units.find((u) => u.unitId === options.unitId);
   if (!unit) throw new Error(`Unknown unitId: ${options.unitId}`);
 
-  const items: CharItem[] = unit.sections
-    .filter((s) => s.type === "char_table")
-    .flatMap((s) => s.items);
+  const items: CharItem[] = unit.sections.flatMap((s) => {
+    if (s.type !== "char_table") return [];
+    return s.items;
+  });
 
   if (items.length < options.questionCount) {
     throw new Error(
