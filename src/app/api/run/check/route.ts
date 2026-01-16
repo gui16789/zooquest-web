@@ -7,7 +7,7 @@ import { getContent } from "@/infra/content/localContent";
 import { generateRun } from "@/domain/questions/generate";
 import { gradeRun } from "@/domain/questions/grade";
 import type { Answer, Question } from "@/domain/questions/types";
-import type { ContentSchemaV1, CharItem } from "@/domain/content/types";
+import type { CharItem, ContentSchema } from "@/domain/content/types";
 
 const bodySchema = z.object({
   runId: z.string().uuid(),
@@ -16,7 +16,7 @@ const bodySchema = z.object({
   payload: z.unknown().optional(),
 });
 
-function getCharItems(content: ContentSchemaV1, unitId: string): CharItem[] {
+function getCharItems(content: ContentSchema, unitId: string): CharItem[] {
   const unit = content.units.find((u) => u.unitId === unitId);
   if (!unit) return [];
 
@@ -26,13 +26,13 @@ function getCharItems(content: ContentSchemaV1, unitId: string): CharItem[] {
   });
 }
 
-function pickWords(content: ContentSchemaV1, unitId: string, hanzi: string): string[] {
+function pickWords(content: ContentSchema, unitId: string, hanzi: string): string[] {
   const chars = getCharItems(content, unitId);
   const item = chars.find((c) => c.hanzi === hanzi);
   return (item?.words ?? []).filter((w) => w.length > 0).slice(0, 2);
 }
 
-function buildExplanation(content: ContentSchemaV1, unitId: string, q: Question): string {
+function buildExplanation(content: ContentSchema, unitId: string, q: Question): string {
   switch (q.type) {
     case "mcq_pinyin": {
       const words = pickWords(content, unitId, q.hanzi);

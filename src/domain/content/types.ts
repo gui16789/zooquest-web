@@ -6,10 +6,27 @@ export type ContentSchemaV1 = {
   units: Unit[];
 };
 
+
+export type ContentSchemaV2 = {
+  schemaVersion: 2;
+  subject: "chinese";
+  grade: 2;
+  term: "up";
+  units: UnitV2[];
+};
+
+export type ContentSchema = ContentSchemaV1 | ContentSchemaV2;
+
 export type Unit = {
   unitId: string;
   title: string;
   sections: Section[];
+};
+
+export type UnitV2 = {
+  unitId: string;
+  title: string;
+  sections: SectionV2[];
 };
 
 export type Section =
@@ -18,6 +35,15 @@ export type Section =
   | SentencePatternSection
   | PoemSection
   | ReadingComprehensionSection;
+
+export type SectionV2 =
+  | CharTableSection
+  | WordDisambiguationSectionV2
+  | SentencePatternSection
+  | PoemSectionV2
+  | ReadingComprehensionSection
+  | WordListSection
+  | WordPatternsSection;
 
 export type CharTableSection = {
   sectionId: string;
@@ -45,11 +71,25 @@ export type WordDisambiguationSection = {
   items: Array<PolyphoneItem | SynAntItem | ConfusingWordsItem>;
 };
 
+export type WordDisambiguationSectionV2 = {
+  sectionId: string;
+  type: "word_disambiguation";
+  title: string;
+  items: Array<PolyphoneItemV2 | SynAntItem | ConfusingWordsItemV2>;
+};
+
 export type PolyphoneItem = {
   itemId: string;
   kind: "polyphone";
   hanzi: string; // e.g. 教
   options: Array<{ pinyin: string; example: string }>; // e.g. 教书 / 教室
+};
+
+export type PolyphoneItemV2 = {
+  itemId: string;
+  kind: "polyphone";
+  hanzi: string;
+  options: Array<{ pinyin: string; example: string; sentence?: string }>;
 };
 
 export type SynAntItem = {
@@ -66,6 +106,16 @@ export type ConfusingWordsItem = {
   prompt: string;
   correct: string;
   distractors: string[];
+};
+
+export type ConfusingWordsItemV2 = {
+  itemId: string;
+  kind: "confusing";
+  prompt: string;
+  correct: string;
+  distractors: string[];
+  rule?: string;
+  examples?: string[];
 };
 
 // T3 句子仿写（模板 + 词库）
@@ -97,6 +147,36 @@ export type Poem = {
   title: string;
   author: string;
   lines: string[];
+};
+
+export type PoemSectionV2 = {
+  sectionId: string;
+  type: "poem";
+  title: string;
+  poems: PoemV2[];
+};
+
+export type PoemV2 = {
+  poemId: string;
+  title: string;
+  author: string;
+  lines: string[];
+  glossary?: Record<string, string>;
+  meaning?: string;
+};
+
+export type WordListSection = {
+  sectionId: string;
+  type: "word_list";
+  title: string;
+  items: Array<{ itemId: string; word: string; pinyin?: string; tags?: string[] }>;
+};
+
+export type WordPatternsSection = {
+  sectionId: string;
+  type: "word_patterns";
+  title: string;
+  patterns: Array<{ patternId: string; patternType: string; examples: string[]; tags?: string[] }>;
 };
 
 // T5 课文理解（选择/判断）

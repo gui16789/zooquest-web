@@ -1,5 +1,5 @@
 import { createRng } from "@/domain/rng";
-import type { ContentSchemaV1, Poem, Passage } from "@/domain/content/types";
+import type { ContentSchema, Poem, Passage } from "@/domain/content/types";
 import type { BossMcqQuestion, BossRun } from "@/domain/boss/types";
 
 export type GenerateBossRunOptions = {
@@ -9,7 +9,7 @@ export type GenerateBossRunOptions = {
   questionCount: number; // Boss固定 6
 };
 
-export function generateBossRun(content: ContentSchemaV1, options: GenerateBossRunOptions): BossRun {
+export function generateBossRun(content: ContentSchema, options: GenerateBossRunOptions): BossRun {
   const unit = content.units.find((u) => u.unitId === options.unitId);
   if (!unit) throw new Error(`Unknown unitId: ${options.unitId}`);
 
