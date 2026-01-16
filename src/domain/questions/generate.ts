@@ -5,12 +5,19 @@ import type {
   PolyphoneItem,
   SynAntItem,
   SentencePattern,
+  ConfusingWordsItem,
+  ConfusingWordsItemV2,
+  WordListSection,
+  WordPatternsSection,
 } from "@/domain/content/types";
 import type {
   McqHanziByPinyinQuestion,
   McqPinyinQuestion,
   McqPolyphoneQuestion,
   McqSynonymAntonymQuestion,
+  McqConfusingWordsQuestion,
+  McqWordSpellingQuestion,
+  McqWordPatternMatchQuestion,
   QuizRun,
   SentencePatternFillQuestion,
   Question,
@@ -55,6 +62,21 @@ export function generateRun(content: ContentSchema, options: GenerateRunOptions)
     return s.items.flatMap((it) => (it.kind === "syn_ant" ? [it] : []));
   });
 
+  const confusing: Array<ConfusingWordsItem | ConfusingWordsItemV2> = unit.sections.flatMap((s) => {
+    if (s.type !== "word_disambiguation") return [];
+    return s.items.flatMap((it) => (it.kind === "confusing" ? [it] : []));
+  });
+
+  const wordList = unit.sections.flatMap((s) => {
+    if (s.type !== "word_list") return [];
+    return (s as WordListSection).items;
+  });
+
+  const wordPatterns = unit.sections.flatMap((s) => {
+    if (s.type !== "word_patterns") return [];
+    return (s as WordPatternsSection).patterns;
+  });
+
   const patterns: SentencePattern[] = unit.sections.flatMap((s) => {
     if (s.type !== "sentence_pattern") return [];
     return s.patterns;
@@ -87,14 +109,17 @@ export function generateRun(content: ContentSchema, options: GenerateRunOptions)
     }
   }
 
-  // T2: prefer polyphone items, then syn/ant.
+  // T2: disambiguation + spelling + word patterns.
   const t2Pool = rng.shuffle([
     ...polyphones.map((p) => ({ kind: "poly" as const, item: p })),
     ...synAnt.map((s) => ({ kind: "syn" as const, item: s })),
+    ...confusing.map((c) => ({ kind: "confusing" as const, item: c })),
+    ...wordList.map((w) => ({ kind: "word_list" as const, item: w })),
+    ...wordPatterns.map((p) => ({ kind: "word_patterns" as const, item: p })),
   ]);
 
   if (mix.t2 > 0 && t2Pool.length === 0) {
-    throw new Error("No T2 items available for word disambiguation");
+    throw new Error("No T2 items available for disambiguation/spelling/patterns");
   }
 
   const wordCandidates = buildWordCandidates(charItems, synAnt);
@@ -103,10 +128,32 @@ export function generateRun(content: ContentSchema, options: GenerateRunOptions)
     const picked = t2Pool[i % t2Pool.length];
     if (!picked) break;
 
-    if (picked.kind === "poly") {
-      questions.push(buildMcqPolyphone(picked.item, options, rng, questions.length));
-    } else {
-      questions.push(buildMcqSynAnt(picked.item, wordCandidates, rng, questions.length));
+    switch (picked.kind) {
+      case "poly":
+        questions.push(buildMcqPolyphone(picked.item, options, rng, questions.length));
+        break;
+      case "syn":
+        questions.push(buildMcqSynAnt(picked.item, wordCandidates, rng, questions.length));
+        break;
+      case "confusing":
+        questions.push(
+          buildMcqConfusing(
+            picked.item,
+            wordList.map((w) => w.word).filter((w) => w !== picked.item.correct),
+            options.choiceCount,
+            rng,
+            questions.length,
+          ),
+        );
+        break;
+      case "word_list":
+        questions.push(buildMcqWordSpelling(picked.item, wordList, options.choiceCount, rng, questions.length));
+        break;
+      case "word_patterns":
+        questions.push(
+          buildMcqWordPatternMatch(picked.item, wordPatterns, options.choiceCount, rng, questions.length),
+        );
+        break;
     }
   }
 
@@ -147,6 +194,7 @@ function buildMcqPinyin(
     questionId: `${options.runId}:${index + 1}`,
     type: "mcq_pinyin",
     prompt: `“${item.hanzi}”的拼音是？`,
+    knowledgeRefs: [`kp_char:${item.hanzi}`],
     hanzi: item.hanzi,
     choices,
     correctChoice: correct,
@@ -168,10 +216,15 @@ function buildMcqHanziByPinyin(
     questionId: `${options.runId}:${index + 1}`,
     type: "mcq_hanzi_by_pinyin",
     prompt: `拼音“${item.pinyin}”对应的汉字是？`,
+    knowledgeRefs: [`kp_char:${item.hanzi}`],
     pinyin: item.pinyin,
     choices,
     correctChoice: correct,
   };
+}
+
+function stripParenHints(input: string): string {
+  return input.replace(/\([^)]*\)/g, "").replace(/（[^）]*）/g, "");
 }
 
 function buildMcqPolyphone(
@@ -187,10 +240,18 @@ function buildMcqPolyphone(
   const example = picked.example;
   const choices = rng.shuffle(item.options.map((o) => o.pinyin));
 
+  const sentence = (picked as { sentence?: string }).sentence;
+  const context = sentence ? stripParenHints(sentence).trim() : null;
+
+  const prompt = context
+    ? `在句子“${context}”里，“${item.hanzi}”读音是？`
+    : `“${example}”里的“${item.hanzi}”读音是？`;
+
   return {
     questionId: `${options.runId}:${index + 1}`,
     type: "mcq_polyphone",
-    prompt: `“${example}”里的“${item.hanzi}”读音是？`,
+    prompt,
+    knowledgeRefs: [`kp_poly:${item.hanzi}:${correct}:${example}`],
     hanzi: item.hanzi,
     example,
     choices,
@@ -225,10 +286,15 @@ function buildMcqSynAnt(
 
   const choices = rng.shuffle(Array.from(picked));
 
+  const knowledgeRefs: McqSynonymAntonymQuestion["knowledgeRefs"] = item.synonym
+    ? [`kp_syn:${item.word}~${item.synonym}`, `kp_word:${item.word}`]
+    : [`kp_ant:${item.word}!${item.antonym ?? correct}`, `kp_word:${item.word}`];
+
   return {
     questionId: `syn:${index + 1}`,
     type: "mcq_syn_ant",
     prompt,
+    knowledgeRefs,
     choices,
     correctChoice: correct,
   };
@@ -248,6 +314,103 @@ function buildWordCandidates(chars: CharItem[], synAnt: SynAntItem[]): string[] 
   }
 
   return Array.from(words).filter((w) => w.length > 0);
+}
+
+function buildMcqConfusing(
+  item: ConfusingWordsItem | ConfusingWordsItemV2,
+  distractorPool: string[],
+  choiceCount: number,
+  rng: ReturnType<typeof createRng>,
+  index: number,
+): McqConfusingWordsQuestion {
+  const picked = new Set<string>();
+  picked.add(item.correct);
+  for (const d of item.distractors) picked.add(d);
+
+  while (picked.size < Math.min(choiceCount, distractorPool.length + 1) && distractorPool.length > 0) {
+    picked.add(distractorPool[rng.nextInt(distractorPool.length)]!);
+  }
+
+  const choices = rng.shuffle(Array.from(picked));
+  const rule = "rule" in item ? item.rule : undefined;
+  const examples = "examples" in item ? item.examples : undefined;
+
+  return {
+    questionId: `conf:${index + 1}`,
+    type: "mcq_confusing",
+    prompt: item.prompt,
+    knowledgeRefs: [`kp_confusing:${item.itemId}`],
+    choices,
+    correctChoice: item.correct,
+    rule,
+    examples,
+  };
+}
+
+function buildMcqWordSpelling(
+  item: WordListSection["items"][number],
+  allWordList: WordListSection["items"],
+  choiceCount: number,
+  rng: ReturnType<typeof createRng>,
+  index: number,
+): McqWordSpellingQuestion {
+  const correct = item.word;
+
+  const pool = allWordList.map((w) => w.word).filter((w) => w !== correct);
+  const uniqPool = Array.from(new Set(pool));
+
+  const picked = new Set<string>();
+  picked.add(correct);
+
+  while (picked.size < Math.min(choiceCount, uniqPool.length + 1) && uniqPool.length > 0) {
+    picked.add(uniqPool[rng.nextInt(uniqPool.length)]!);
+  }
+
+  const choices = rng.shuffle(Array.from(picked));
+
+  return {
+    questionId: `spell:${index + 1}`,
+    type: "mcq_word_spelling",
+    prompt: item.pinyin ? `拼音“${item.pinyin}”对应的词语是？` : "选出正确的词语：",
+    knowledgeRefs: [`kp_word:${item.word}`],
+    choices,
+    correctChoice: correct,
+    pinyin: item.pinyin,
+  };
+}
+
+function buildMcqWordPatternMatch(
+  pattern: WordPatternsSection["patterns"][number],
+  allPatterns: WordPatternsSection["patterns"],
+  choiceCount: number,
+  rng: ReturnType<typeof createRng>,
+  index: number,
+): McqWordPatternMatchQuestion {
+  const correct = pattern.examples[rng.nextInt(pattern.examples.length)]!;
+
+  const distractorPool = allPatterns
+    .flatMap((p) => p.examples)
+    .filter((w) => w.trim().length > 0 && w !== correct);
+  const uniq = Array.from(new Set(distractorPool));
+
+  const picked = new Set<string>();
+  picked.add(correct);
+
+  while (picked.size < Math.min(choiceCount, uniq.length + 1) && uniq.length > 0) {
+    picked.add(uniq[rng.nextInt(uniq.length)]!);
+  }
+
+  const choices = rng.shuffle(Array.from(picked));
+
+  return {
+    questionId: `wp:${index + 1}`,
+    type: "mcq_word_pattern_match",
+    prompt: `下面哪个词语属于“${pattern.patternType}”结构？`,
+    knowledgeRefs: [`kp_word_pattern:${pattern.patternId}`, `kp_word_pattern_type:${pattern.patternType}`],
+    patternType: pattern.patternType,
+    choices,
+    correctChoice: correct,
+  };
 }
 
 function buildSentencePatternFill(
@@ -278,6 +441,7 @@ function buildSentencePatternFill(
     questionId: `pattern:${index + 1}`,
     type: "sentence_pattern_fill",
     prompt: `用句型“${pattern.name}”完成句子：`,
+    knowledgeRefs: [`kp_sentence_pattern:${pattern.patternId}`, `kp_pattern_name:${pattern.name}`],
     template: pattern.template,
     slots: pattern.slots,
     wordBank,

@@ -13,11 +13,14 @@ export function gradeRun(questions: Question[], answers: Answer[]): GradeResult 
 
     if (!answer) return { questionId: q.questionId, isCorrect: false };
 
-    switch (q.type) {
-      case "mcq_pinyin":
-      case "mcq_hanzi_by_pinyin":
-      case "mcq_polyphone":
-      case "mcq_syn_ant": {
+      switch (q.type) {
+        case "mcq_pinyin":
+        case "mcq_hanzi_by_pinyin":
+        case "mcq_polyphone":
+        case "mcq_syn_ant":
+        case "mcq_confusing":
+        case "mcq_word_spelling":
+        case "mcq_word_pattern_match": {
         const isCorrect = answer.choice === q.correctChoice;
         return { questionId: q.questionId, isCorrect };
       }
