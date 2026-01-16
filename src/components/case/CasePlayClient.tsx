@@ -303,10 +303,54 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
     // Nodes configuration
     // S1, S2, S3, Boss
     const nodes = [
-      { id: 's1', label: '甜甜圈摊位', x: 20, y: 80 },
-      { id: 's2', label: '雨林区管道', x: 80, y: 50 },
-      { id: 's3', label: '闪电档案室', x: 20, y: 20 },
-      { id: 'boss', label: '审讯室', x: 50, y: 5, isBoss: true }
+      { 
+        id: 's1', 
+        label: '甜甜圈摊位', 
+        x: 20, 
+        y: 80,
+        icon: (
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="3" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3" opacity="0.3" />
+          </svg>
+        )
+      },
+      { 
+        id: 's2', 
+        label: '雨林区管道', 
+        x: 80, 
+        y: 50,
+        icon: (
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21V3" />
+          </svg>
+        )
+      },
+      { 
+        id: 's3', 
+        label: '闪电档案室', 
+        x: 20, 
+        y: 20,
+        icon: (
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+             <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+          </svg>
+        )
+      },
+      { 
+        id: 'boss', 
+        label: '审讯室', 
+        x: 50, 
+        y: 5, 
+        isBoss: true,
+        icon: (
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      }
     ];
 
     return (
@@ -444,10 +488,8 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
                           <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                        ) : status === 'locked' ? (
                           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                       ) : isBoss ? (
-                          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                        ) : (
-                          <span className="text-xl font-bold">{index + 1}</span>
+                          node.icon
                        )}
                        
                        {/* Label */}
@@ -556,6 +598,14 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
               <div className="space-y-2">
                 <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">New Clue Obtained</div>
                 <h3 className="text-2xl font-bold text-white tracking-tight">{pendingClue.name}</h3>
+                {run?.story.briefing?.successLine && (
+                   <div className="mt-2 inline-block rounded border border-amber-500/30 bg-amber-500/10 px-3 py-1">
+                     <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500">结案播报 (Report)</div>
+                     <div className="text-sm font-medium text-amber-200">
+                       {run.story.briefing.successLine}
+                     </div>
+                   </div>
+                )}
               </div>
 
               <div className="inline-flex items-center gap-3 rounded-full bg-zinc-800/50 px-4 py-1.5 ring-1 ring-white/10">
