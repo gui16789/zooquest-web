@@ -128,10 +128,72 @@ export async function POST(req: Request) {
   const isCorrect = graded.details[0]?.isCorrect ?? false;
   const explanation = buildExplanation(content, unitId, question);
 
-  // KP event capture + stats aggregation (best-effort, don't break gameplay on DB errors)
+  const nowIso = new Date().toISOString();
+
+  type GrowthUpdate = {
+    xp: number;
+    level: number;
+    title: string;
+    leveledUp: boolean;
+    xpGained: number;
+  };
+
+  let growthUpdate: GrowthUpdate | null = null;
+
+  function titleForLevel(lvl: number): string {
+    if (lvl >= 5) return "王牌探员";
+    if (lvl >= 4) return "高级探员";
+    if (lvl >= 3) return "正式探员";
+    if (lvl >= 2) return "见习探员";
+    return "新手探员";
+  }
+
+  function levelForXp(totalXp: number): number {
+    // Simple ramp: every 120 XP = +1 level
+    return Math.max(1, Math.floor(totalXp / 120) + 1);
+  }
+
+  // Growth + KP event capture (best-effort, don't break gameplay on DB errors)
   try {
-    const nowIso = new Date().toISOString();
     const knowledgeRefs = question.knowledgeRefs;
+
+    // Growth update
+    try {
+      const xpGained = isCorrect ? 8 : 2;
+
+      const { data: existingGrowth, error: growthSelectError } = await supabase
+        .from("kid_growth")
+        .select("xp")
+        .eq("kid_user_id", user.kidUserId)
+        .maybeSingle();
+
+      if (!growthSelectError) {
+        const prevXp = (existingGrowth?.xp as number | undefined) ?? 0;
+        const nextXp = prevXp + xpGained;
+        const prevLevel = levelForXp(prevXp);
+        const nextLevel = levelForXp(nextXp);
+        const leveledUp = nextLevel > prevLevel;
+        const nextTitle = titleForLevel(nextLevel);
+
+        await supabase.from("kid_growth").upsert({
+          kid_user_id: user.kidUserId,
+          xp: nextXp,
+          level: nextLevel,
+          title: nextTitle,
+          updated_at: nowIso,
+        });
+
+        growthUpdate = {
+          xp: nextXp,
+          level: nextLevel,
+          title: nextTitle,
+          leveledUp,
+          xpGained,
+        };
+      }
+    } catch {
+      // ignore
+    }
 
     const { error: eventError } = await supabase.from("kp_events").insert(
       knowledgeRefs.map((kpId) => ({
@@ -144,6 +206,7 @@ export async function POST(req: Request) {
         created_at: nowIso,
       })),
     );
+
 
     if (!eventError) {
       const delta = isCorrect ? 20 : -25;
@@ -193,6 +256,7 @@ export async function POST(req: Request) {
       isCorrect,
       explanation,
       knowledgeRefs: question.knowledgeRefs,
+      growth: growthUpdate,
       correct: {
         kind: "sentence_pattern_fill" as const,
         payload: question.correct,
@@ -205,6 +269,7 @@ export async function POST(req: Request) {
     isCorrect,
     explanation,
     knowledgeRefs: question.knowledgeRefs,
+    growth: growthUpdate,
     correct: {
       kind: "mcq" as const,
       choice: question.correctChoice,

@@ -10,29 +10,66 @@ import { generateRun } from "@/domain/questions/generate";
 
 type SceneId = "s1" | "s2" | "s3";
 
+type SceneBriefing = {
+  chief: { name: string; title: string };
+  partner: { name: string; title: string };
+  introLines: string[];
+  successLine: string;
+};
+
 const bodySchema = z.object({
   unitId: z.string().regex(/^u[1-8]$/),
   sceneId: z.enum(["s1", "s2", "s3"]),
 });
 
-const SCENE_META: Record<SceneId, { title: string; clueId: string; clueName: string; tasks: string[] }> = {
+const SCENE_META: Record<SceneId, { title: string; clueId: string; clueName: string; tasks: string[]; briefing: SceneBriefing }> = {
   s1: {
     title: "案发现场·泥地脚印",
     clueId: "clue_1_mud_footprints",
     clueName: "泥地脚印卡",
     tasks: ["识别脚印标签", "找出对应证物", "修复证物袋标签", "证物分类", "写进案件记录"],
+    briefing: {
+      chief: { name: "犀牛局长", title: "ZPD 局长" },
+      partner: { name: "狐狸搭档", title: "你的搭档" },
+      introLines: [
+        "新手探员，水滴镇的案发现场出现了可疑脚印。",
+        "你负责把证物标签读准、归档清楚，我们才能追踪去向。",
+        "每确认一项证据，就离真相更近一步。",
+      ],
+      successLine: "证据成立。第一条线索已入袋。",
+    },
   },
   s2: {
     title: "雨林区·排水管追踪",
     clueId: "clue_2_drain_route",
     clueName: "水迹路线图",
     tasks: ["读懂监控词条", "追踪路线标牌", "修复对讲机拼写", "选择正确搭配", "路线合成"],
+    briefing: {
+      chief: { name: "犀牛局长", title: "ZPD 局长" },
+      partner: { name: "狐狸搭档", title: "你的搭档" },
+      introLines: [
+        "线索指向雨林区的排水管网络。",
+        "有人用‘同音不同义’的词把路线伪装成无关信息。",
+        "靠你用语境把它拆穿。",
+      ],
+      successLine: "路线复原完成。第二条线索已入袋。",
+    },
   },
   s3: {
     title: "闪电窗口·证词核对",
     clueId: "clue_3_testimony",
     clueName: "证词对照表",
     tasks: ["证词关键词识别", "关键词拼写校验", "证词用词更准确", "证词前后是否一致", "结案陈词"],
+    briefing: {
+      chief: { name: "犀牛局长", title: "ZPD 局长" },
+      partner: { name: "狐狸搭档", title: "你的搭档" },
+      introLines: [
+        "嫌疑人口供前后不一。",
+        "我们要核对关键词、纠正用词，找出逻辑漏洞。",
+        "最后写出结案陈词：让证据自己说话。",
+      ],
+      successLine: "口供矛盾点已锁定。可以进入审讯。",
+    },
   },
 };
 
@@ -122,6 +159,7 @@ export async function POST(req: Request) {
       caseId: `case_${unitId}:${runId}`,
       sceneId,
       sceneTitle: meta.title,
+      briefing: meta.briefing,
       clue: { id: meta.clueId, name: meta.clueName },
       tasks: meta.tasks.map((label, index) => ({ index, label })),
     },

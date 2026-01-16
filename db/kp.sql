@@ -32,3 +32,13 @@ create table if not exists kp_stats (
 
 create index if not exists idx_kp_stats_user_unit on kp_stats (kid_user_id, unit_id);
 create index if not exists idx_kp_stats_user_kp on kp_stats (kid_user_id, kp_id);
+
+-- Detective growth profile (XP + rank)
+create table if not exists kid_growth (
+  kid_user_id uuid primary key references kid_users(id) on delete cascade,
+  xp int not null default 0,
+  level int not null default 1,
+  title text not null default '新手探员',
+  updated_at timestamptz not null default now()
+);
+

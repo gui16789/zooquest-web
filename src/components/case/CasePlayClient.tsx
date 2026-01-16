@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 
@@ -15,6 +15,12 @@ type StoryMeta = {
   caseId: string;
   sceneId: SceneId;
   sceneTitle: string;
+  briefing?: {
+    chief: { name: string; title: string };
+    partner: { name: string; title: string };
+    introLines: string[];
+    successLine: string;
+  };
   clue: { id: string; name: string };
   tasks: StoryTask[];
 };
@@ -56,18 +62,31 @@ type StoryRun = {
 
 type AnswerState = { choice: string; payload?: unknown };
 
+type Growth = {
+  level: number;
+  title: string;
+  xp: number;
+  maxXp: number;
+};
+
 type CheckResponse =
   | {
       isCorrect: boolean;
       explanation: string;
       knowledgeRefs: KnowledgeRefs;
       correct: { kind: "mcq"; choice: string };
+      growth?: Growth;
+      leveledUp?: boolean;
+      xpGained?: number;
     }
   | {
       isCorrect: boolean;
       explanation: string;
       knowledgeRefs: KnowledgeRefs;
       correct: { kind: "sentence_pattern_fill"; payload: Record<string, string>; preview: string };
+      growth?: Growth;
+      leveledUp?: boolean;
+      xpGained?: number;
     };
 
 type FeedbackState = {
@@ -92,6 +111,11 @@ function isAnswered(q: StoryQuestion, a: AnswerState | undefined): boolean {
 const SCENE_ORDER: SceneId[] = ["s1", "s2", "s3"];
 
 export function CasePlayClient(props: { unitId: string; onExit: () => void; onBoss: () => void }) {
+  const [kidName, setKidName] = useState<string>("新手探员");
+  const [growth, setGrowth] = useState<Growth | null>(null);
+  const [showBriefing, setShowBriefing] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: "xp" | "levelup" } | null>(null);
+
   const [sceneIndex, setSceneIndex] = useState(0);
   const [run, setRun] = useState<StoryRun | null>(null);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
@@ -106,11 +130,20 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   const currentQuestion = run?.questions[currentIndex] ?? null;
   const currentAnswer = currentQuestion ? answers[currentQuestion.questionId] : undefined;
   const currentFeedback = currentQuestion ? feedbackByQuestionId[currentQuestion.questionId] : undefined;
+  const briefing = run?.story.briefing;
 
-  const unansweredCount = useMemo(() => {
-    if (!run) return 0;
-    return run.questions.filter((q) => !isAnswered(q, answers[q.questionId])).length;
-  }, [run, answers]);
+
+  useEffect(() => {
+    fetch("/api/progress")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.ok && json.data) {
+          if (json.data.user?.nickname) setKidName(json.data.user.nickname);
+          if (json.data.growth) setGrowth(json.data.growth);
+        }
+      })
+      .catch(() => { /* ignore */ });
+  }, [props.unitId]);
 
   async function startScene(nextSceneId: SceneId) {
     setError(null);
@@ -118,6 +151,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
     setAnswers({});
     setFeedbackByQuestionId({});
     setCurrentIndex(0);
+    setShowBriefing(true);
 
     const res = await fetch("/api/story/run/start", {
       method: "POST",
@@ -161,6 +195,21 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
 
       const data = json.data as CheckResponse;
       const correctText = data.correct.kind === "mcq" ? data.correct.choice : `参考：${data.correct.preview}`;
+
+      if (data.growth) {
+        setGrowth(data.growth);
+      }
+      
+      if (data.leveledUp && data.growth) {
+        setToast({ message: `升级！${data.growth.title}（Lv.${data.growth.level}）`, type: "levelup" });
+        setTimeout(() => setToast(null), 4000);
+      } else if (data.xpGained) {
+        setToast({ 
+          message: data.isCorrect ? `证据成立 +${data.xpGained}XP` : `继续努力 +${data.xpGained}XP`, 
+          type: "xp" 
+        });
+        setTimeout(() => setToast(null), 2500);
+      }
 
       setFeedbackByQuestionId((prev) => ({
         ...prev,
@@ -218,130 +267,234 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   }
 
   if (!run || !currentQuestion) {
-    return <div className="text-sm text-zinc-600">案件加载中…</div>;
+    return <div className="text-sm text-zinc-600 animate-pulse">案件加载中…</div>;
   }
 
   const hasAnswered = isAnswered(currentQuestion, currentAnswer);
   const hasFeedback = Boolean(currentFeedback);
 
   return (
-    <div className="w-full max-w-2xl space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-xs text-zinc-600">ZPD 档案：Case {props.unitId.toUpperCase()}</div>
-          <div className="mt-1 text-xl font-semibold">{run.story.sceneTitle}</div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-              任务 {currentIndex + 1}/{run.questions.length}
-            </span>
-            <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-              已收集线索：{clues.length}/3
-            </span>
+    <div className="w-full max-w-2xl">
+       {/* Toast */}
+      {toast && (
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 rounded-full px-6 py-2 shadow-xl animate-in fade-in zoom-in slide-in-from-top-4 duration-300 font-bold tracking-wide ${
+          toast.type === 'levelup' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white border-2 border-white' : 'bg-zinc-900 text-white'
+        }`}>
+          {toast.message}
+        </div>
+      )}
+
+      {/* Briefing Modal */}
+      {showBriefing && briefing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/95 p-4 animate-in fade-in duration-300 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl">
+            <div className="bg-zinc-950 px-6 py-4 border-b border-zinc-800 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"/>
+                    <h2 className="text-sm font-mono tracking-widest text-zinc-400">MISSION BRIEFING // TOP SECRET</h2>
+                </div>
+                <div className="text-xs font-mono text-zinc-600">{new Date().toLocaleDateString()}</div>
+            </div>
+            
+            <div className="p-8 space-y-6">
+               {briefing.introLines.map((line, i) => (
+                 <div key={i} className="flex gap-4">
+                    <div className={`shrink-0 text-sm font-bold uppercase tracking-wider w-16 text-right pt-1 ${i % 2 === 0 ? 'text-blue-400' : 'text-amber-400'}`}>
+                        {i % 2 === 0 ? briefing.chief.name : briefing.partner.name}
+                    </div>
+                    <div className="text-lg leading-relaxed text-zinc-200 font-medium">{line}</div>
+                 </div>
+               ))}
+            </div>
+
+            <div className="bg-zinc-950 p-6 border-t border-zinc-800">
+                <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-6 text-lg tracking-widest uppercase" onClick={() => setShowBriefing(false)}>
+                    开始行动 (Accept Mission)
+                </Button>
+            </div>
           </div>
         </div>
-        <Button type="button" variant="ghost" onClick={props.onExit}>
-          返回地图
-        </Button>
-      </div>
+      )}
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-6">
-        <div className="text-xs font-semibold text-zinc-500">{currentQuestion.taskLabel}</div>
-        <div className="mt-2 text-sm font-medium">{currentQuestion.prompt}</div>
-
-        {currentQuestion.type === "sentence_pattern_fill" ? (
-          (() => {
-            const payload = (currentAnswer?.payload ?? {}) as Record<string, string>;
-            const preview = currentQuestion.template.replace(/\{(.*?)\}/g, (_, key) => payload[key] || "____");
-
-            return (
-              <div className="mt-3 space-y-3">
-                <div className="rounded-md bg-zinc-50 p-3 text-sm">{preview}</div>
-                {currentQuestion.slots.map((slot) => {
-                  const selected = payload[slot.key] ?? "";
-                  const options = currentQuestion.wordBank[slot.key] ?? [];
-
-                  return (
-                    <div key={slot.key} className="space-y-2">
-                      <div className="text-xs text-zinc-600">
-                        {slot.label}：<span className="font-medium text-black">{selected || "（点击选择）"}</span>
+      {/* Main UI */}
+      <div className="space-y-4">
+          {/* Header Card */}
+          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between bg-zinc-50 px-4 py-3 border-b border-zinc-100">
+                  <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white shadow-sm ring-2 ring-white ring-offset-2 ring-offset-zinc-50">
+                           {growth?.level ?? 1}
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {options.map((opt) => {
-                          const isSelected = selected === opt;
-                          return (
-                            <button
-                              key={opt}
-                              type="button"
-                              disabled={hasFeedback}
-                              className={`rounded-md border px-3 py-2 text-sm ${
-                                isSelected ? "border-black bg-zinc-100" : "border-zinc-200"
-                              } ${hasFeedback ? "cursor-not-allowed opacity-60" : ""}`}
-                              onClick={() => {
-                                const nextPayload = { ...payload, [slot.key]: opt };
-                                setAnswers((prev) => ({
-                                  ...prev,
-                                  [currentQuestion.questionId]: {
-                                    choice: JSON.stringify(nextPayload),
-                                    payload: nextPayload,
-                                  },
-                                }));
-                              }}
-                            >
-                              {opt}
-                            </button>
-                          );
-                        })}
+                      <div>
+                          <div className="flex items-center gap-2">
+                             <div className="text-base font-bold text-zinc-900">{kidName} 探员</div>
+                             {growth?.title && <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">{growth.title}</span>}
+                          </div>
+                          {growth ? (
+                              <div className="mt-1 h-1.5 w-24 rounded-full bg-zinc-200 overflow-hidden">
+                                  <div className="h-full bg-blue-500" style={{ width: `${Math.min((growth.xp / growth.maxXp) * 100, 100)}%` }} />
+                              </div>
+                          ) : (
+                              <div className="text-xs text-zinc-400">身份验证中...</div>
+                          )}
                       </div>
-                    </div>
-                  );
-                })}
+                  </div>
+                  <div className="text-right">
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Case File</div>
+                      <div className="font-bold text-zinc-700">{props.unitId.toUpperCase()}</div>
+                  </div>
               </div>
-            );
-          })()
-        ) : (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {currentQuestion.choices.map((c) => {
-              const selected = currentAnswer?.choice === c;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  disabled={hasFeedback}
-                  className={`rounded-md border px-3 py-2 text-sm ${
-                    selected ? "border-black bg-zinc-100" : "border-zinc-200"
-                  } ${hasFeedback ? "cursor-not-allowed opacity-60" : ""}`}
-                  onClick={() =>
-                    setAnswers((prev) => ({
-                      ...prev,
-                      [currentQuestion.questionId]: { choice: c },
-                    }))
-                  }
-                >
-                  {c}
-                </button>
-              );
-            })}
+              <div className="px-4 py-2 bg-white flex justify-between items-center text-xs">
+                    <span className="font-medium text-zinc-500">
+                      {run.story.sceneTitle}
+                    </span>
+                     <div className="flex items-center gap-3">
+                        <span className="font-mono text-zinc-400">
+                        TASK {currentIndex + 1}/{run.questions.length}
+                        </span>
+                        <span className={`font-bold ${clues.length >= 3 ? 'text-green-600' : 'text-amber-600'}`}>
+                        CLUES {clues.length}/3
+                        </span>
+                    </div>
+              </div>
           </div>
-        )}
-
-        {hasFeedback ? (
-          <div className="mt-4 rounded-md bg-zinc-50 p-3 text-sm text-zinc-700">
-            <span className="mr-2 font-medium text-black">解析</span>
-            {currentFeedback?.explanation}
+        
+        {/* Question Card */}
+        <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <div className="h-24 w-24 rounded-full border-4 border-black"/>
           </div>
-        ) : null}
+          
+          <div className="relative">
+            <div className="mb-4 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded bg-zinc-900 text-xs font-bold text-white">Q</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">{currentQuestion.taskLabel}</span>
+            </div>
+            
+            <div className="text-lg font-medium leading-relaxed text-zinc-900">{currentQuestion.prompt}</div>
 
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-xs text-zinc-500">未完成：{unansweredCount}</div>
-          {hasFeedback ? (
-            <Button type="button" onClick={next}>
-              {currentIndex >= run.questions.length - 1 ? "领取线索" : "下一步"}
-            </Button>
-          ) : (
-            <Button type="button" onClick={() => void checkCurrent()} disabled={checking || !hasAnswered}>
-              {checking ? "核对中…" : "核对"}
-            </Button>
-          )}
+            {currentQuestion.type === "sentence_pattern_fill" ? (
+            (() => {
+                const payload = (currentAnswer?.payload ?? {}) as Record<string, string>;
+                const preview = currentQuestion.template.replace(/\{(.*?)\}/g, (_, key) => payload[key] || "____");
+
+                return (
+                <div className="mt-6 space-y-6">
+                    <div className="rounded-lg bg-zinc-50 p-4 text-base font-medium border border-zinc-100 shadow-inner">{preview}</div>
+                    {currentQuestion.slots.map((slot) => {
+                    const selected = payload[slot.key] ?? "";
+                    const options = currentQuestion.wordBank[slot.key] ?? [];
+
+                    return (
+                        <div key={slot.key} className="space-y-3">
+                        <div className="text-sm text-zinc-600 flex items-center gap-2">
+                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500"/>
+                            {slot.label}：<span className="font-bold text-zinc-900 border-b-2 border-blue-100 px-1">{selected || "（点击下方选项）"}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {options.map((opt) => {
+                            const isSelected = selected === opt;
+                            return (
+                                <button
+                                key={opt}
+                                type="button"
+                                disabled={hasFeedback}
+                                className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
+                                    isSelected 
+                                    ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-600" 
+                                    : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"
+                                } ${hasFeedback ? "cursor-not-allowed opacity-60" : ""}`}
+                                onClick={() => {
+                                    const nextPayload = { ...payload, [slot.key]: opt };
+                                    setAnswers((prev) => ({
+                                    ...prev,
+                                    [currentQuestion.questionId]: {
+                                        choice: JSON.stringify(nextPayload),
+                                        payload: nextPayload,
+                                    },
+                                    }));
+                                }}
+                                >
+                                {opt}
+                                </button>
+                            );
+                            })}
+                        </div>
+                        </div>
+                    );
+                    })}
+                </div>
+                );
+            })()
+            ) : (
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {currentQuestion.choices.map((c) => {
+                const selected = currentAnswer?.choice === c;
+                return (
+                    <button
+                    key={c}
+                    type="button"
+                    disabled={hasFeedback}
+                    className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all ${
+                        selected 
+                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-600" 
+                        : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"
+                    } ${hasFeedback ? "cursor-not-allowed opacity-60" : ""}`}
+                    onClick={() =>
+                        setAnswers((prev) => ({
+                        ...prev,
+                        [currentQuestion.questionId]: { choice: c },
+                        }))
+                    }
+                    >
+                    <div className="flex items-center gap-3">
+                        <div className={`h-4 w-4 rounded-full border ${selected ? 'border-blue-600 bg-blue-600' : 'border-zinc-300'}`}/>
+                        {c}
+                    </div>
+                    </button>
+                );
+                })}
+            </div>
+            )}
+
+            {hasFeedback ? (
+            <div className={`mt-6 rounded-lg p-4 text-sm ${
+                currentFeedback?.isCorrect 
+                ? 'bg-green-50 text-green-800 border border-green-100' 
+                : 'bg-amber-50 text-amber-900 border border-amber-100'
+            }`}>
+                <div className="flex items-center gap-2 mb-1 font-bold">
+                    {currentFeedback?.isCorrect ? (
+                        <>
+                            <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            回答正确
+                        </>
+                    ) : (
+                        <>
+                            <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            案情分析
+                        </>
+                    )}
+                </div>
+                {currentFeedback?.explanation}
+            </div>
+            ) : null}
+
+            <div className="mt-8 flex items-center justify-between border-t border-zinc-100 pt-6">
+                <Button type="button" variant="ghost" onClick={props.onExit} className="text-zinc-400 hover:text-zinc-600">
+                    暂时撤退
+                </Button>
+            {hasFeedback ? (
+                <Button type="button" onClick={next} className="bg-zinc-900 text-white hover:bg-zinc-800 px-8">
+                {currentIndex >= run.questions.length - 1 ? "领取线索 >>" : "继续调查 >>"}
+                </Button>
+            ) : (
+                <Button type="button" onClick={() => void checkCurrent()} disabled={checking || !hasAnswered} className="bg-blue-600 text-white hover:bg-blue-500 px-8 shadow-md shadow-blue-200">
+                {checking ? "核对中…" : "提交证据"}
+                </Button>
+            )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
