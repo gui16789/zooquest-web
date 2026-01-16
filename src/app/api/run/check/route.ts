@@ -48,18 +48,18 @@ function buildExplanation(content: ContentSchemaV1, unitId: string, q: Question)
     }
 
     case "mcq_polyphone":
-      return `在“${q.example}”里，“${q.hanzi}”读“${q.correctChoice}”。`;
+      return `在“${q.example}”里，“${q.hanzi}”读“${q.correctChoice}”，注意看词语语境。`;
 
     case "mcq_syn_ant": {
       const word = q.prompt.match(/“(.+?)”/)?.[1];
-      if (q.prompt.includes("近义词") && word) return `“${word}”的近义词是“${q.correctChoice}”。`;
-      if (q.prompt.includes("反义词") && word) return `“${word}”的反义词是“${q.correctChoice}”。`;
+      if (q.prompt.includes("近义词") && word) return `“${word}”的近义词是“${q.correctChoice}”，意思相近。`;
+      if (q.prompt.includes("反义词") && word) return `“${word}”的反义词是“${q.correctChoice}”，意思相反。`;
       return `正确答案是“${q.correctChoice}”。`;
     }
 
     case "sentence_pattern_fill": {
       const preview = q.template.replace(/\{(.*?)\}/g, (_, key) => q.correct[key] ?? "____");
-      return `参考：${preview}`;
+      return `句型提示：照着句子结构填词。参考：${preview}`;
     }
   }
 }

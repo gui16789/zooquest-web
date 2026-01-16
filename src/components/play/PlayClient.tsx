@@ -63,13 +63,23 @@ type FeedbackState = {
   correctText?: string;
 };
 
-const STAGES = [
-  { code: "A", label: "投喂小蝌蚪" },
-  { code: "A", label: "投喂小蝌蚪" },
-  { code: "B", label: "闪电抉择" },
-  { code: "B", label: "闪电抉择" },
-  { code: "C", label: "尼克拼句" },
-] as const;
+type ReviewItem = {
+  questionId: string;
+  prompt: string;
+  yourAnswer: string;
+  correctAnswer: string;
+  explanation: string;
+};
+
+type StageCode = "A" | "B" | "C";
+
+const STAGES: Array<{ code: StageCode; label: string; mission: string }> = [
+  { code: "A", label: "投喂小蝌蚪", mission: "选对读音/汉字，帮小蝌蚪找线索。" },
+  { code: "A", label: "投喂小蝌蚪", mission: "继续投喂！连对更快通关。" },
+  { code: "B", label: "闪电抉择", mission: "看清语境，选出最合适的词/读音。" },
+  { code: "B", label: "闪电抉择", mission: "再来一次抉择，稳住就赢。" },
+  { code: "C", label: "尼克拼句", mission: "把词语拼成通顺句子。" },
+];
 
 function isAnswered(q: RunQuestion, a: AnswerState | undefined): boolean {
   if (!a) return false;
@@ -89,6 +99,8 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
   const [feedbackByQuestionId, setFeedbackByQuestionId] = useState<Record<string, FeedbackState>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [introIndex, setIntroIndex] = useState<number | null>(0);
+  const [skipStageIntro, setSkipStageIntro] = useState(false);
   const [checking, setChecking] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +120,7 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
     setAnswers({});
     setFeedbackByQuestionId({});
     setCurrentIndex(0);
+    setIntroIndex(skipStageIntro ? null : 0);
 
     const res = await fetch("/api/run/start", {
       method: "POST",
@@ -207,7 +220,12 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
       return;
     }
 
-    setCurrentIndex((x) => Math.min(x + 1, run.questions.length - 1));
+    const nextIndex = Math.min(currentIndex + 1, run.questions.length - 1);
+    setCurrentIndex(nextIndex);
+
+    if (!skipStageIntro && (nextIndex === 2 || nextIndex === 4)) {
+      setIntroIndex(nextIndex);
+    }
   }
 
   if (error) {
@@ -226,6 +244,32 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
   }
 
   if (result) {
+    const wrongQuestions: ReviewItem[] = run.questions.flatMap((q) => {
+      const fb = feedbackByQuestionId[q.questionId];
+      if (!fb || fb.isCorrect) return [];
+
+      const a = answers[q.questionId];
+      const yourAnswer =
+        q.type === "sentence_pattern_fill"
+          ? (() => {
+              const payload = (a?.payload ?? {}) as Record<string, string>;
+              return q.template.replace(/\{(.*?)\}/g, (_, key) => payload[key] || "____");
+            })()
+          : (a?.choice ?? "");
+
+      const correctAnswer = (fb.correctText ?? "").replace(/^参考：/, "");
+
+      return [
+        {
+          questionId: q.questionId,
+          prompt: q.prompt,
+          yourAnswer,
+          correctAnswer,
+          explanation: fb.explanation,
+        },
+      ];
+    });
+
     return (
       <div className="w-full max-w-2xl space-y-4">
         <div className="rounded-lg border border-zinc-200 bg-white p-6">
@@ -240,6 +284,36 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
             <div className="mt-3 text-sm">新获得勋章：{result.newBadges.join(", ")}</div>
           )}
         </div>
+
+        {wrongQuestions.length > 0 ? (
+          <div className="rounded-lg border border-zinc-200 bg-white p-6">
+            <div className="text-sm font-semibold">错题回看（{wrongQuestions.length}）</div>
+            <div className="mt-4 space-y-6">
+              {wrongQuestions.map((item) => (
+                <div key={item.questionId} className="rounded-md border border-zinc-200 bg-white p-4">
+                  <div className="text-sm font-medium text-black">{item.prompt}</div>
+
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-md border border-red-100 bg-red-50 p-3">
+                      <div className="text-[10px] font-semibold text-red-500">你的回答</div>
+                      <div className="mt-1 text-sm text-red-700">{item.yourAnswer}</div>
+                    </div>
+                    <div className="rounded-md border border-green-100 bg-green-50 p-3">
+                      <div className="text-[10px] font-semibold text-green-600">正确答案</div>
+                      <div className="mt-1 text-sm text-green-700">{item.correctAnswer}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 rounded-md bg-zinc-50 p-3 text-sm text-zinc-700">
+                    <span className="mr-2 font-medium text-black">解析</span>
+                    {item.explanation}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="flex gap-2">
           <Button type="button" onClick={() => void start()}>
             再来一局（换题）
@@ -254,6 +328,54 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
 
   if (!currentQuestion) {
     return <div className="text-sm text-zinc-600">题目为空</div>;
+  }
+
+  if (introIndex !== null) {
+    const introStage = STAGES[introIndex] ?? stage;
+    return (
+      <div className="w-full max-w-2xl space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm text-zinc-600">关卡：{props.unitId.toUpperCase()}</div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                阶段 {introStage.code}：{introStage.label}
+              </span>
+              <span className="text-xs text-zinc-400">
+                {currentIndex + 1}/{run.questions.length}
+              </span>
+            </div>
+          </div>
+          <Button type="button" variant="ghost" onClick={() => void start()}>
+            换一套题
+          </Button>
+        </div>
+
+        <div className="rounded-lg border border-zinc-200 bg-white p-6">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            Stage {introStage.code}
+          </div>
+          <div className="mt-2 text-xl font-semibold text-black">{introStage.label}</div>
+          <div className="mt-3 text-sm text-zinc-600">{introStage.mission}</div>
+
+          <div className="mt-6 flex items-center justify-between gap-3">
+            <label className="flex items-center gap-2 text-xs text-zinc-500">
+              <input
+                type="checkbox"
+                checked={skipStageIntro}
+                onChange={(e) => setSkipStageIntro(e.target.checked)}
+                className="h-4 w-4 rounded border-zinc-300"
+              />
+              跳过后续开场
+            </label>
+
+            <Button type="button" onClick={() => setIntroIndex(null)}>
+              开始
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const hasAnswered = isAnswered(currentQuestion, currentAnswer);
