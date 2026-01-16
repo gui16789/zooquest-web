@@ -128,6 +128,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   const [advanceTick, setAdvanceTick] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [clues, setClues] = useState<Array<{ id: string; name: string }>>([]);
+  const [pendingClue, setPendingClue] = useState<{ id: string; name: string } | null>(null);
 
   const sceneId = SCENE_ORDER[sceneIndex] ?? "s1";
 
@@ -245,25 +246,27 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
     const isLast = currentIndex >= run.questions.length - 1;
     if (isLast) {
       // Clear scene: award clue and advance.
+      const clue = run.story.clue;
       setClues((prev) => {
-        const clue = run.story.clue;
         if (prev.some((c) => c.id === clue.id)) return prev;
         return [...prev, clue];
       });
-
-      const nextSceneIndex = sceneIndex + 1;
-      if (nextSceneIndex >= SCENE_ORDER.length) {
-        // MVP: once 3 clues collected, go to boss.
-        props.onBoss();
-        return;
-      }
-
-      setSceneIndex(nextSceneIndex);
+      setPendingClue(clue);
       return;
     }
 
     setCurrentIndex((i) => Math.min(i + 1, run.questions.length - 1));
     setAdvanceTick((t) => t + 1);
+  }
+
+  function handleClueDismiss() {
+    setPendingClue(null);
+    const nextSceneIndex = sceneIndex + 1;
+    if (nextSceneIndex >= SCENE_ORDER.length) {
+      props.onBoss();
+      return;
+    }
+    setSceneIndex(nextSceneIndex);
   }
 
   if (error) {
@@ -325,6 +328,48 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
                 <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-6 text-lg tracking-widest uppercase" onClick={() => setShowBriefing(false)}>
                     开始行动 (Accept Mission)
                 </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clue Acquired Overlay */}
+      {pendingClue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/95 p-4 animate-in fade-in duration-300 backdrop-blur-sm">
+          <div className="w-full max-w-md overflow-hidden rounded-xl border border-amber-500/50 bg-zinc-900 shadow-2xl ring-1 ring-amber-500/20">
+            <div className="bg-amber-950/30 px-6 py-4 border-b border-amber-500/30 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                <h2 className="text-sm font-mono tracking-widest text-amber-500">EVIDENCE ACQUIRED</h2>
+              </div>
+              <div className="text-xs font-mono text-amber-700/50">CASE FILE UPDATE</div>
+            </div>
+
+            <div className="p-8 text-center space-y-6">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10 ring-1 ring-amber-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)]">
+                <svg className="h-10 w-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">New Clue Obtained</div>
+                <h3 className="text-2xl font-bold text-white tracking-tight">{pendingClue.name}</h3>
+              </div>
+
+              <div className="inline-flex items-center gap-3 rounded-full bg-zinc-800/50 px-4 py-1.5 ring-1 ring-white/10">
+                <span className="text-xs font-medium text-zinc-400">Total Clues:</span>
+                <span className="font-mono text-lg font-bold text-amber-500">{clues.length}/3</span>
+              </div>
+            </div>
+
+            <div className="bg-zinc-950 p-6 border-t border-zinc-800">
+              <Button 
+                className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-6 text-lg tracking-widest uppercase shadow-[0_0_20px_-5px_rgba(217,119,6,0.5)] transition-all hover:shadow-[0_0_30px_-5px_rgba(217,119,6,0.7)]" 
+                onClick={handleClueDismiss}
+              >
+                {clues.length >= 3 ? "进入审讯 (Interrogate)" : "前往下一地点 (Next)"}
+              </Button>
             </div>
           </div>
         </div>
