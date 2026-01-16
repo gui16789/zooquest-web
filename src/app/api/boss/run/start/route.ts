@@ -45,12 +45,29 @@ export async function POST(req: Request) {
     runId: run.runId,
     unitId: run.unitId,
     seed: run.seed,
-    questions: run.questions.map((q) => ({
-      questionId: q.questionId,
-      type: q.type,
-      prompt: q.prompt,
-      choices: q.choices,
-      meta: q.meta,
-    })),
+    questions: run.questions.map((q) => {
+      if (q.type === "boss_sentence_pattern_fill") {
+        return {
+          questionId: q.questionId,
+          phaseId: q.phaseId,
+          type: q.type,
+          prompt: q.prompt,
+          knowledgeRefs: q.knowledgeRefs,
+          template: q.template,
+          slots: q.slots,
+          wordBank: q.wordBank,
+        };
+      }
+
+      return {
+        questionId: q.questionId,
+        phaseId: q.phaseId,
+        type: q.type,
+        prompt: q.prompt,
+        knowledgeRefs: q.knowledgeRefs,
+        choices: q.choices,
+        meta: q.meta,
+      };
+    }),
   });
 }

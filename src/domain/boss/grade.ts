@@ -1,12 +1,24 @@
-import type { BossAnswer, BossGradeResult, BossMcqQuestion } from "@/domain/boss/types";
+import type { BossAnswer, BossGradeResult, BossQuestion } from "@/domain/boss/types";
 
-export function gradeBossRun(questions: BossMcqQuestion[], answers: BossAnswer[]): BossGradeResult {
-  const byId = new Map(answers.map((a) => [a.questionId, a.choice]));
+export function gradeBossRun(questions: BossQuestion[], answers: BossAnswer[]): BossGradeResult {
+  const byId = new Map(answers.map((a) => [a.questionId, a]));
   let correct = 0;
 
   for (const q of questions) {
-    const choice = byId.get(q.questionId);
-    if (choice != null && choice === q.correctChoice) correct += 1;
+    const answer = byId.get(q.questionId);
+    if (!answer) continue;
+
+    if (q.type === "boss_sentence_pattern_fill") {
+      const payload = answer.payload;
+      if (typeof payload !== "object" || payload === null) continue;
+
+      const filled = payload as Record<string, unknown>;
+      const isCorrect = Object.entries(q.correct).every(([k, v]) => filled[k] === v);
+      if (isCorrect) correct += 1;
+      continue;
+    }
+
+    if (answer.choice === q.correctChoice) correct += 1;
   }
 
   const total = questions.length;

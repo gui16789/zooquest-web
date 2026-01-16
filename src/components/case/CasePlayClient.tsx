@@ -91,7 +91,7 @@ function isAnswered(q: StoryQuestion, a: AnswerState | undefined): boolean {
 
 const SCENE_ORDER: SceneId[] = ["s1", "s2", "s3"];
 
-export function CasePlayClient(props: { unitId: string; onDone: () => void }) {
+export function CasePlayClient(props: { unitId: string; onExit: () => void; onBoss: () => void }) {
   const [sceneIndex, setSceneIndex] = useState(0);
   const [run, setRun] = useState<StoryRun | null>(null);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
@@ -190,11 +190,11 @@ export function CasePlayClient(props: { unitId: string; onDone: () => void }) {
       });
 
       const nextSceneIndex = sceneIndex + 1;
-      if (nextSceneIndex >= SCENE_ORDER.length) {
-        // MVP: once 3 clues collected, unlock boss by routing user back to map.
-        props.onDone();
-        return;
-      }
+       if (nextSceneIndex >= SCENE_ORDER.length) {
+         // MVP: once 3 clues collected, go to boss.
+         props.onBoss();
+         return;
+       }
 
       setSceneIndex(nextSceneIndex);
       return;
@@ -210,7 +210,7 @@ export function CasePlayClient(props: { unitId: string; onDone: () => void }) {
         <Button type="button" onClick={() => void startScene(sceneId)}>
           重新开始本场景
         </Button>
-        <Button type="button" variant="ghost" onClick={props.onDone}>
+        <Button type="button" variant="ghost" onClick={props.onExit}>
           返回地图
         </Button>
       </div>
@@ -239,7 +239,7 @@ export function CasePlayClient(props: { unitId: string; onDone: () => void }) {
             </span>
           </div>
         </div>
-        <Button type="button" variant="ghost" onClick={props.onDone}>
+        <Button type="button" variant="ghost" onClick={props.onExit}>
           返回地图
         </Button>
       </div>
