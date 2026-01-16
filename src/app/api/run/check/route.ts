@@ -120,6 +120,7 @@ export async function POST(req: Request) {
     return jsonOk({
       isCorrect,
       explanation,
+      knowledgeRefs: question.knowledgeRefs,
       correct: {
         kind: "sentence_pattern_fill" as const,
         payload: question.correct,
@@ -131,6 +132,7 @@ export async function POST(req: Request) {
   return jsonOk({
     isCorrect,
     explanation,
+    knowledgeRefs: question.knowledgeRefs,
     correct: {
       kind: "mcq" as const,
       choice: question.correctChoice,

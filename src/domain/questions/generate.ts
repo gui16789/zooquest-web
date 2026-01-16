@@ -147,6 +147,7 @@ function buildMcqPinyin(
     questionId: `${options.runId}:${index + 1}`,
     type: "mcq_pinyin",
     prompt: `“${item.hanzi}”的拼音是？`,
+    knowledgeRefs: [`kp_char:${item.hanzi}`],
     hanzi: item.hanzi,
     choices,
     correctChoice: correct,
@@ -168,6 +169,7 @@ function buildMcqHanziByPinyin(
     questionId: `${options.runId}:${index + 1}`,
     type: "mcq_hanzi_by_pinyin",
     prompt: `拼音“${item.pinyin}”对应的汉字是？`,
+    knowledgeRefs: [`kp_char:${item.hanzi}`],
     pinyin: item.pinyin,
     choices,
     correctChoice: correct,
@@ -191,6 +193,7 @@ function buildMcqPolyphone(
     questionId: `${options.runId}:${index + 1}`,
     type: "mcq_polyphone",
     prompt: `“${example}”里的“${item.hanzi}”读音是？`,
+    knowledgeRefs: [`kp_poly:${item.hanzi}:${correct}:${example}`],
     hanzi: item.hanzi,
     example,
     choices,
@@ -225,10 +228,15 @@ function buildMcqSynAnt(
 
   const choices = rng.shuffle(Array.from(picked));
 
+  const knowledgeRefs: McqSynonymAntonymQuestion["knowledgeRefs"] = item.synonym
+    ? [`kp_syn:${item.word}~${item.synonym}`, `kp_word:${item.word}`]
+    : [`kp_ant:${item.word}!${item.antonym ?? correct}`, `kp_word:${item.word}`];
+
   return {
     questionId: `syn:${index + 1}`,
     type: "mcq_syn_ant",
     prompt,
+    knowledgeRefs,
     choices,
     correctChoice: correct,
   };
@@ -278,6 +286,7 @@ function buildSentencePatternFill(
     questionId: `pattern:${index + 1}`,
     type: "sentence_pattern_fill",
     prompt: `用句型“${pattern.name}”完成句子：`,
+    knowledgeRefs: [`kp_sentence_pattern:${pattern.patternId}`, `kp_pattern_name:${pattern.name}`],
     template: pattern.template,
     slots: pattern.slots,
     wordBank,

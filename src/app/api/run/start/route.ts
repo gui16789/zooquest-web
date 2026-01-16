@@ -54,6 +54,7 @@ export async function POST(req: Request) {
             questionId: q.questionId,
             type: q.type,
             prompt: q.prompt,
+            knowledgeRefs: q.knowledgeRefs,
             hanzi: q.hanzi,
             choices: q.choices,
           };
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
             questionId: q.questionId,
             type: q.type,
             prompt: q.prompt,
+            knowledgeRefs: q.knowledgeRefs,
             pinyin: q.pinyin,
             choices: q.choices,
           };
@@ -70,6 +72,7 @@ export async function POST(req: Request) {
             questionId: q.questionId,
             type: q.type,
             prompt: q.prompt,
+            knowledgeRefs: q.knowledgeRefs,
             hanzi: q.hanzi,
             example: q.example,
             choices: q.choices,
@@ -79,6 +82,7 @@ export async function POST(req: Request) {
             questionId: q.questionId,
             type: q.type,
             prompt: q.prompt,
+            knowledgeRefs: q.knowledgeRefs,
             choices: q.choices,
           };
         case "sentence_pattern_fill":
@@ -86,6 +90,7 @@ export async function POST(req: Request) {
             questionId: q.questionId,
             type: q.type,
             prompt: q.prompt,
+            knowledgeRefs: q.knowledgeRefs,
             template: q.template,
             slots: q.slots,
             wordBank: q.wordBank,
