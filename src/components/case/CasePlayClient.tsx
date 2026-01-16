@@ -66,7 +66,14 @@ type Growth = {
   level: number;
   title: string;
   xp: number;
-  maxXp: number;
+};
+
+type GrowthUpdate = {
+  xp: number;
+  level: number;
+  title: string;
+  leveledUp: boolean;
+  xpGained: number;
 };
 
 type CheckResponse =
@@ -75,18 +82,14 @@ type CheckResponse =
       explanation: string;
       knowledgeRefs: KnowledgeRefs;
       correct: { kind: "mcq"; choice: string };
-      growth?: Growth;
-      leveledUp?: boolean;
-      xpGained?: number;
+      growth?: GrowthUpdate | null;
     }
   | {
       isCorrect: boolean;
       explanation: string;
       knowledgeRefs: KnowledgeRefs;
       correct: { kind: "sentence_pattern_fill"; payload: Record<string, string>; preview: string };
-      growth?: Growth;
-      leveledUp?: boolean;
-      xpGained?: number;
+      growth?: GrowthUpdate | null;
     };
 
 type FeedbackState = {
@@ -122,6 +125,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   const [feedbackByQuestionId, setFeedbackByQuestionId] = useState<Record<string, FeedbackState>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [checking, setChecking] = useState(false);
+  const [advanceTick, setAdvanceTick] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [clues, setClues] = useState<Array<{ id: string; name: string }>>([]);
 
@@ -196,17 +200,16 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
       const data = json.data as CheckResponse;
       const correctText = data.correct.kind === "mcq" ? data.correct.choice : `参考：${data.correct.preview}`;
 
-      if (data.growth) {
-        setGrowth(data.growth);
-      }
-      
-      if (data.leveledUp && data.growth) {
-        setToast({ message: `升级！${data.growth.title}（Lv.${data.growth.level}）`, type: "levelup" });
+      const g = data.growth ?? null;
+      if (g) setGrowth(g);
+
+      if (g?.leveledUp) {
+        setToast({ message: `升级！${g.title}（Lv.${g.level}）`, type: "levelup" });
         setTimeout(() => setToast(null), 4000);
-      } else if (data.xpGained) {
-        setToast({ 
-          message: data.isCorrect ? `证据成立 +${data.xpGained}XP` : `继续努力 +${data.xpGained}XP`, 
-          type: "xp" 
+      } else if (g?.xpGained) {
+        setToast({
+          message: data.isCorrect ? `证据成立 +${g.xpGained}XP` : `继续努力 +${g.xpGained}XP`,
+          type: "xp",
         });
         setTimeout(() => setToast(null), 2500);
       }
@@ -229,6 +232,16 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   function next() {
     if (!run) return;
 
+    // Clear feedback for current question so the next step is interactive.
+    if (currentQuestion) {
+      setFeedbackByQuestionId((prev) => {
+        if (!(currentQuestion.questionId in prev)) return prev;
+        const next = { ...prev };
+        delete next[currentQuestion.questionId];
+        return next;
+      });
+    }
+
     const isLast = currentIndex >= run.questions.length - 1;
     if (isLast) {
       // Clear scene: award clue and advance.
@@ -239,17 +252,18 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
       });
 
       const nextSceneIndex = sceneIndex + 1;
-       if (nextSceneIndex >= SCENE_ORDER.length) {
-         // MVP: once 3 clues collected, go to boss.
-         props.onBoss();
-         return;
-       }
+      if (nextSceneIndex >= SCENE_ORDER.length) {
+        // MVP: once 3 clues collected, go to boss.
+        props.onBoss();
+        return;
+      }
 
       setSceneIndex(nextSceneIndex);
       return;
     }
 
     setCurrentIndex((i) => Math.min(i + 1, run.questions.length - 1));
+    setAdvanceTick((t) => t + 1);
   }
 
   if (error) {
@@ -332,7 +346,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
                           </div>
                           {growth ? (
                               <div className="mt-1 h-1.5 w-24 rounded-full bg-zinc-200 overflow-hidden">
-                                  <div className="h-full bg-blue-500" style={{ width: `${Math.min((growth.xp / growth.maxXp) * 100, 100)}%` }} />
+                                  <div className="h-full bg-blue-500" style={{ width: `${Math.min(((growth.xp % 120) / 120) * 100, 100)}%` }} />
                               </div>
                           ) : (
                               <div className="text-xs text-zinc-400">身份验证中...</div>
@@ -360,7 +374,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
           </div>
         
         {/* Question Card */}
-        <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm relative overflow-hidden">
+        <div key={`q-${currentQuestion.questionId}-${advanceTick}`} className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <div className="h-24 w-24 rounded-full border-4 border-black"/>
           </div>
