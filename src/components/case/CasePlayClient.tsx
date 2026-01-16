@@ -336,6 +336,41 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
             </div>
          </div>
 
+         <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-bold text-amber-800">线索袋</div>
+                <div className="text-xs text-amber-700/70">已收集 {collectedCount}/3</div>
+              </div>
+              <div className="flex items-center gap-2">
+                {[0, 1, 2].map((idx) => {
+                  const hasClue = clues[idx];
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border text-xs font-bold ${
+                        hasClue ? "border-amber-500 bg-amber-200 text-amber-900" : "border-amber-200 bg-white text-amber-300"
+                      }`}
+                      title={hasClue ? hasClue.name : "未收集"}
+                    >
+                      {hasClue ? idx + 1 : "?"}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {clues.length > 0 && (
+              <div className="mt-3 space-y-1 text-xs text-amber-900/80">
+                {clues.map((clue) => (
+                  <div key={clue.id} className="flex items-center gap-2">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    <span>{clue.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+         </div>
+
          {/* Map Container */}
          <div className="relative aspect-[4/3] w-full rounded-2xl bg-zinc-50 border border-zinc-200 shadow-inner overflow-hidden">
             {/* Grid Pattern Background */}
@@ -463,25 +498,36 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
             <div className="bg-zinc-950 px-6 py-4 border-b border-zinc-800 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"/>
-                    <h2 className="text-sm font-mono tracking-widest text-zinc-400">MISSION BRIEFING // TOP SECRET</h2>
+                    <h2 className="text-sm font-mono tracking-widest text-zinc-400">ZPD 案件简报</h2>
                 </div>
                 <div className="text-xs font-mono text-zinc-600">{new Date().toLocaleDateString()}</div>
             </div>
             
             <div className="p-8 space-y-6">
-               {briefing.introLines.map((line, i) => (
-                 <div key={i} className="flex gap-4">
-                    <div className={`shrink-0 text-sm font-bold uppercase tracking-wider w-16 text-right pt-1 ${i % 2 === 0 ? 'text-blue-400' : 'text-amber-400'}`}>
-                        {i % 2 === 0 ? briefing.chief.name : briefing.partner.name}
+                {briefing.introLines.map((line, i) => (
+                  <div key={i} className="flex items-start gap-4">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-bold ${
+                        i % 2 === 0 ? "border-blue-400 text-blue-300" : "border-amber-400 text-amber-300"
+                      }`}
+                    >
+                      {i % 2 === 0 ? "局" : "狐"}
                     </div>
-                     <div className="text-lg leading-relaxed text-zinc-200 font-medium">{line.replace("{nickname}", kidName)}</div>
-                 </div>
-               ))}
+                    <div>
+                      <div className={`text-xs font-bold uppercase tracking-wider ${i % 2 === 0 ? "text-blue-300" : "text-amber-300"}`}>
+                        {i % 2 === 0 ? briefing.chief.name : briefing.partner.name}
+                      </div>
+                      <div className="text-lg leading-relaxed text-zinc-200 font-medium">
+                        {line.replace("{nickname}", kidName)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
             </div>
 
             <div className="bg-zinc-950 p-6 border-t border-zinc-800">
                 <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-6 text-lg tracking-widest uppercase" onClick={() => setShowBriefing(false)}>
-                    开始行动 (Accept Mission)
+                    开始行动
                 </Button>
             </div>
           </div>

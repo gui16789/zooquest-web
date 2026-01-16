@@ -32,11 +32,11 @@ const SCENE_META: Record<SceneId, { title: string; clueId: string; clueName: str
       chief: { name: "犀牛局长", title: "ZPD 局长" },
       partner: { name: "狐尼克", title: "你的搭档" },
       introLines: [
-        "{nickname}探员，甜甜圈摊位的招牌被人动了手脚。",
-        "摊主只记得一个油渍脚印，我们得先把证物标签对齐。",
-        "别急，先把每条线索读准。",
+        "{nickname}探员，甜甜圈摊位出事啦！招牌被人乱改了。",
+        "摊主只记得一个油渍脚印，我们先把证物标签对齐。",
+        "你负责对证物，我来盯嫌疑人，配合一下～",
       ],
-      successLine: "甜甜圈线索锁定，第一条证据已入袋。",
+      successLine: "甜甜圈线索拿到手，第一条证据入袋！",
     },
   },
   s2: {
@@ -49,10 +49,10 @@ const SCENE_META: Record<SceneId, { title: string; clueId: string; clueName: str
       partner: { name: "狐尼克", title: "你的搭档" },
       introLines: [
         "嫌疑人的路线指向雨林区的排水管网。",
-        "有人用同音词把路标伪装成无关信息。",
-        "用语境把它拆穿，我们就能追上。",
+        "有人用同音词把路标装成“假路标”。",
+        "看语境，拆穿它，我们就能追上！",
       ],
-      successLine: "路线复原完成，第二条证据已入袋。",
+      successLine: "路线复原完成，第二条证据入袋～",
     },
   },
   s3: {
@@ -64,11 +64,11 @@ const SCENE_META: Record<SceneId, { title: string; clueId: string; clueName: str
       chief: { name: "犀牛局长", title: "ZPD 局长" },
       partner: { name: "狐尼克", title: "你的搭档" },
       introLines: [
-        "闪电递来的口供速度太慢，但漏洞很明显。",
-        "我们要把关键词对齐，看看谁在撒谎。",
+        "闪电递来的口供慢悠悠，但漏洞挺明显。",
+        "我们把关键词对齐，谁在撒谎一眼就知道。",
         "最后写出结案陈词：让证据自己说话。",
       ],
-      successLine: "口供矛盾点锁定，可以进入审讯室。",
+      successLine: "口供矛盾点锁定，去审讯室！",
     },
   },
 };
