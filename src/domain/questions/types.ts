@@ -3,6 +3,9 @@ export type Question =
   | McqHanziByPinyinQuestion
   | McqPolyphoneQuestion
   | McqSynonymAntonymQuestion
+  | McqConfusingWordsQuestion
+  | McqWordSpellingQuestion
+  | McqWordPatternMatchQuestion
   | SentencePatternFillQuestion;
 
 export type KnowledgeRef = string;
@@ -44,6 +47,37 @@ export type McqSynonymAntonymQuestion = {
   type: "mcq_syn_ant";
   prompt: string;
   knowledgeRefs: [KnowledgeRef] | [KnowledgeRef, KnowledgeRef];
+  choices: string[];
+  correctChoice: string;
+};
+
+export type McqConfusingWordsQuestion = {
+  questionId: string;
+  type: "mcq_confusing";
+  prompt: string;
+  knowledgeRefs: [KnowledgeRef] | [KnowledgeRef, KnowledgeRef];
+  choices: string[];
+  correctChoice: string;
+  rule?: string;
+  examples?: string[];
+};
+
+export type McqWordSpellingQuestion = {
+  questionId: string;
+  type: "mcq_word_spelling";
+  prompt: string;
+  knowledgeRefs: [KnowledgeRef] | [KnowledgeRef, KnowledgeRef];
+  choices: string[];
+  correctChoice: string;
+  pinyin?: string;
+};
+
+export type McqWordPatternMatchQuestion = {
+  questionId: string;
+  type: "mcq_word_pattern_match";
+  prompt: string;
+  knowledgeRefs: [KnowledgeRef] | [KnowledgeRef, KnowledgeRef];
+  patternType: string;
   choices: string[];
   correctChoice: string;
 };

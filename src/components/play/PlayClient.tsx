@@ -18,6 +18,9 @@ type RunQuestion =
   | (McqQuestionBase & { type: "mcq_hanzi_by_pinyin"; pinyin: string })
   | (McqQuestionBase & { type: "mcq_polyphone"; hanzi: string; example: string })
   | (McqQuestionBase & { type: "mcq_syn_ant" })
+  | (McqQuestionBase & { type: "mcq_confusing"; rule?: string; examples?: string[] })
+  | (McqQuestionBase & { type: "mcq_word_spelling"; pinyin?: string })
+  | (McqQuestionBase & { type: "mcq_word_pattern_match"; patternType: string })
   | {
       questionId: string;
       type: "sentence_pattern_fill";

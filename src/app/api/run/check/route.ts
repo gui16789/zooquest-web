@@ -57,6 +57,19 @@ function buildExplanation(content: ContentSchema, unitId: string, q: Question): 
       return `正确答案是“${q.correctChoice}”。`;
     }
 
+    case "mcq_confusing": {
+      if (q.rule) return `辨析：${q.rule}`;
+      return `正确答案是“${q.correctChoice}”。`;
+    }
+
+    case "mcq_word_spelling": {
+      const pinyin = q.pinyin ? `（${q.pinyin}）` : "";
+      return `正确词语：${q.correctChoice}${pinyin}`;
+    }
+
+    case "mcq_word_pattern_match":
+      return `“${q.correctChoice}”属于“${q.patternType}”结构。`;
+
     case "sentence_pattern_fill": {
       const preview = q.template.replace(/\{(.*?)\}/g, (_, key) => q.correct[key] ?? "____");
       return `句型提示：照着句子结构填词。参考：${preview}`;
