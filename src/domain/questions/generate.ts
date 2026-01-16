@@ -1,6 +1,6 @@
 import { createRng } from "@/domain/rng";
 import type {
-  ContentSchemaV1,
+  ContentSchema,
   CharItem,
   PolyphoneItem,
   SynAntItem,
@@ -32,7 +32,7 @@ export type GenerateRunOptions = {
   shuffleQuestions?: boolean;
 };
 
-export function generateRun(content: ContentSchemaV1, options: GenerateRunOptions): QuizRun {
+export function generateRun(content: ContentSchema, options: GenerateRunOptions): QuizRun {
   const unit = content.units.find((u) => u.unitId === options.unitId);
   if (!unit) throw new Error(`Unknown unitId: ${options.unitId}`);
 
