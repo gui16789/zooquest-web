@@ -139,6 +139,12 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
 
 
   useEffect(() => {
+    // Case clue progress is local per playthrough.
+    setClues([]);
+    setPendingClue(null);
+    setSceneIndex(0);
+    setCurrentIndex(0);
+
     fetch("/api/progress")
       .then((res) => res.json())
       .then((json) => {
@@ -147,7 +153,9 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
           if (json.data.growth) setGrowth(json.data.growth);
         }
       })
-      .catch(() => { /* ignore */ });
+      .catch(() => {
+        /* ignore */
+      });
   }, [props.unitId]);
 
   async function startScene(nextSceneId: SceneId) {
@@ -359,7 +367,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
 
               <div className="inline-flex items-center gap-3 rounded-full bg-zinc-800/50 px-4 py-1.5 ring-1 ring-white/10">
                 <span className="text-xs font-medium text-zinc-400">Total Clues:</span>
-                <span className="font-mono text-lg font-bold text-amber-500">{clues.length}/3</span>
+                <span className="font-mono text-lg font-bold text-amber-500">{Math.min(clues.length, 3)}/3</span>
               </div>
             </div>
 
