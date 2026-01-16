@@ -69,6 +69,7 @@ type ReviewItem = {
   yourAnswer: string;
   correctAnswer: string;
   explanation: string;
+  questionType: RunQuestion["type"];
 };
 
 type StageCode = "A" | "B" | "C";
@@ -101,6 +102,7 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [introIndex, setIntroIndex] = useState<number | null>(0);
   const [skipStageIntro, setSkipStageIntro] = useState(false);
+  const [rewardStage, setRewardStage] = useState<StageCode | null>(null);
   const [checking, setChecking] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -214,6 +216,15 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
   function next() {
     if (!run) return;
 
+    if (currentIndex === 1 && rewardStage === null) {
+      setRewardStage("A");
+      return;
+    }
+    if (currentIndex === 3 && rewardStage === null) {
+      setRewardStage("B");
+      return;
+    }
+
     const isLast = currentIndex >= run.questions.length - 1;
     if (isLast) {
       void finishRun();
@@ -266,6 +277,7 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
           yourAnswer,
           correctAnswer,
           explanation: fb.explanation,
+          questionType: q.type,
         },
       ];
     });
@@ -298,10 +310,17 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
                       <div className="text-[10px] font-semibold text-red-500">你的回答</div>
                       <div className="mt-1 text-sm text-red-700">{item.yourAnswer}</div>
                     </div>
-                    <div className="rounded-md border border-green-100 bg-green-50 p-3">
-                      <div className="text-[10px] font-semibold text-green-600">正确答案</div>
-                      <div className="mt-1 text-sm text-green-700">{item.correctAnswer}</div>
-                    </div>
+                    {item.questionType === "sentence_pattern_fill" ? (
+                      <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
+                        <div className="text-[10px] font-semibold text-zinc-500">正确答案</div>
+                        <div className="mt-1 text-sm text-zinc-800">{item.correctAnswer}</div>
+                      </div>
+                    ) : (
+                      <div className="rounded-md border border-green-100 bg-green-50 p-3">
+                        <div className="text-[10px] font-semibold text-green-600">正确答案</div>
+                        <div className="mt-1 text-sm text-green-700">{item.correctAnswer}</div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-3 rounded-md bg-zinc-50 p-3 text-sm text-zinc-700">
@@ -328,6 +347,36 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
 
   if (!currentQuestion) {
     return <div className="text-sm text-zinc-600">题目为空</div>;
+  }
+
+  if (rewardStage) {
+    const contentByStage: Record<StageCode, { title: string; text: string }> = {
+      A: { title: "阶段 A 完成", text: "旗开得胜！小蝌蚪们吃得很开心。" },
+      B: { title: "阶段 B 完成", text: "反应神速！你的语感越来越敏锐了。" },
+      C: { title: "阶段完成", text: "做得不错！" },
+    };
+
+    const content = contentByStage[rewardStage];
+
+    return (
+      <div className="w-full max-w-2xl space-y-4">
+        <div className="rounded-lg border border-zinc-200 bg-white p-6">
+          <div className="text-xl font-semibold text-black">{content.title}</div>
+          <div className="mt-2 text-sm text-zinc-600">{content.text}</div>
+          <div className="mt-6 flex justify-end">
+            <Button
+              type="button"
+              onClick={() => {
+                setRewardStage(null);
+                next();
+              }}
+            >
+              继续挑战
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (introIndex !== null) {
@@ -547,9 +596,18 @@ export function PlayClient(props: { unitId: string; onDone: () => void }) {
               </div>
               <div className="mt-2 text-sm text-zinc-700">{currentFeedback.explanation}</div>
               {currentFeedback.correctText ? (
-                <div className="mt-2 text-xs font-medium text-zinc-500">
-                  正确答案：{currentFeedback.correctText}
-                </div>
+                currentQuestion.type === "sentence_pattern_fill" ? (
+                  <div className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 p-3">
+                    <div className="text-xs font-medium text-zinc-500">正确答案</div>
+                    <div className="mt-1 text-sm text-zinc-800">
+                      {currentFeedback.correctText.replace(/^参考：/, "")}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 text-xs font-medium text-zinc-500">
+                    正确答案：{currentFeedback.correctText}
+                  </div>
+                )
               ) : null}
             </div>
 
