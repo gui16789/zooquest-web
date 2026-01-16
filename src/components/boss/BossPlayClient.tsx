@@ -28,6 +28,15 @@ type Result = {
   correct: number;
   total: number;
   newBadges: string[];
+  review: Array<{
+    questionId: string;
+    prompt: string;
+    yourAnswer: string;
+    correctAnswer: string;
+    explanation: string;
+    isCorrect: boolean;
+    meta?: { title?: string; author?: string; source?: string };
+  }>;
 };
 
 export function BossPlayClient(props: { unitId: string; onDone: () => void }) {
@@ -119,6 +128,48 @@ export function BossPlayClient(props: { unitId: string; onDone: () => void }) {
           <div className="mt-2 text-sm">星级：{"⭐".repeat(result.stars)}</div>
           <div className="mt-2 text-sm">{result.passed ? "Boss 通过！" : "再挑战一次！"}</div>
         </div>
+
+        <div className="space-y-3">
+          <div className="text-sm font-medium text-zinc-500">题目回顾</div>
+          {result.review.map((item, idx) => (
+            <div
+              key={item.questionId}
+              className={`rounded-lg border p-4 text-sm ${
+                item.isCorrect ? "border-green-200 bg-green-50/30" : "border-red-200 bg-red-50/30"
+              }`}
+            >
+              <div className="mb-2 flex items-start justify-between gap-4">
+                <div className="font-medium text-zinc-900 whitespace-pre-line">
+                  <span className="mr-1 opacity-50">{idx + 1}.</span>
+                  {item.meta?.title && <span className="mr-2 text-xs text-zinc-500">[{item.meta.title}]</span>}
+                  {item.prompt}
+                </div>
+                <div className={`shrink-0 font-bold ${item.isCorrect ? "text-green-600" : "text-red-600"}`}>
+                  {item.isCorrect ? "正确" : "错误"}
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="rounded bg-white/50 p-2">
+                  <div className="text-xs text-zinc-500">你的答案</div>
+                  <div className={`mt-0.5 font-medium ${item.isCorrect ? "text-green-700" : "text-red-700"}`}>
+                    {item.yourAnswer}
+                  </div>
+                </div>
+                <div className="rounded bg-white/50 p-2">
+                  <div className="text-xs text-zinc-500">正确答案</div>
+                  <div className="mt-0.5 font-medium text-zinc-900">{item.correctAnswer}</div>
+                </div>
+              </div>
+
+              <div className="mt-3 rounded bg-zinc-50/80 p-3 text-zinc-600">
+                <span className="mr-1 font-medium text-zinc-900">解析：</span>
+                {item.explanation}
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="flex gap-2">
           <Button type="button" onClick={() => void start()}>
             再战一次（换题）

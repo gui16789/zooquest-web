@@ -9,6 +9,81 @@ import { gradeBossRun } from "@/domain/boss/grade";
 import { computeBadgeAwards } from "@/domain/badges/rules";
 import { isUnitId } from "@/domain/badges/types";
 import { scoreToStars } from "@/domain/scoring/stars";
+import type { BossMcqQuestion } from "@/domain/boss/types";
+import type { ContentSchema, Passage, Poem } from "@/domain/content/types";
+
+function truncateText(input: string, maxLen: number): string {
+  const trimmed = input.replace(/\s+/g, " ").trim();
+  if (trimmed.length <= maxLen) return trimmed;
+  return `${trimmed.slice(0, Math.max(0, maxLen - 1))}…`;
+}
+
+function getUnitPoems(content: ContentSchema, unitId: string): Poem[] {
+  const unit = content.units.find((u) => u.unitId === unitId);
+  if (!unit) return [];
+
+  return unit.sections.flatMap((s) => {
+    if (s.type !== "poem") return [];
+    return s.poems;
+  });
+}
+
+function getUnitPassages(content: ContentSchema, unitId: string): Passage[] {
+  const unit = content.units.find((u) => u.unitId === unitId);
+  if (!unit) return [];
+
+  return unit.sections.flatMap((s) => {
+    if (s.type !== "reading_comprehension") return [];
+    return s.passages;
+  });
+}
+
+function buildBossExplanation(content: ContentSchema, unitId: string, q: BossMcqQuestion): string {
+  switch (q.type) {
+    case "boss_poem_blank": {
+      const poemTitle = q.meta?.title;
+      const poemAuthor = q.meta?.author;
+      const poem = getUnitPoems(content, unitId).find(
+        (p) => p.title === poemTitle && (poemAuthor == null || p.author === poemAuthor),
+      );
+
+      const maybeMeaning = (poem as { meaning?: string } | undefined)?.meaning;
+      const maybeGlossary = (poem as { glossary?: Record<string, string> } | undefined)?.glossary;
+
+      const glossaryText = maybeGlossary
+        ? `注释：${Object.entries(maybeGlossary)
+            .map(([k, v]) => `${k}：${v}`)
+            .join("；")}`
+        : null;
+
+      const meaningText = maybeMeaning ? `诗意：${maybeMeaning}` : null;
+
+      return [`正确：${q.correctChoice}`, glossaryText, meaningText]
+        .filter((x): x is string => x != null && x.trim().length > 0)
+        .join("\n");
+    }
+
+    case "boss_reading_tf": {
+      const passageTitle = q.meta?.title;
+      const passage = getUnitPassages(content, unitId).find((p) => p.title === passageTitle);
+      const hint = passage ? truncateText(passage.text, 120) : null;
+      const hintText = hint ? `依据：${hint}` : null;
+      return [`正确答案：${q.correctChoice}`, hintText]
+        .filter((x): x is string => x != null && x.trim().length > 0)
+        .join("\n");
+    }
+
+    case "boss_reading_mcq": {
+      const passageTitle = q.meta?.title;
+      const passage = getUnitPassages(content, unitId).find((p) => p.title === passageTitle);
+      const hint = passage ? truncateText(passage.text, 120) : null;
+      const hintText = hint ? `线索：${hint}` : null;
+      return [`正确答案：${q.correctChoice}`, hintText]
+        .filter((x): x is string => x != null && x.trim().length > 0)
+        .join("\n");
+    }
+  }
+}
 
 const bodySchema = z.object({
   runId: z.string().uuid(),
@@ -53,7 +128,8 @@ export async function POST(req: Request) {
   const unitId = unitIdRaw;
   const seed = runRow.seed as number;
 
-  const run = generateBossRun(getContent(), {
+  const content = getContent();
+  const run = generateBossRun(content, {
     unitId,
     seed,
     runId: parsed.data.runId,
@@ -129,6 +205,24 @@ export async function POST(req: Request) {
     newBadges = (inserted ?? []).map((x) => x.badge_id as string);
   }
 
+  const answerById = new Map(parsed.data.answers.map((a) => [a.questionId, a.choice]));
+
+  const review = run.questions.map((q) => {
+    const yourAnswer = answerById.get(q.questionId) ?? "";
+    const isCorrect = yourAnswer.length > 0 && yourAnswer === q.correctChoice;
+    const explanation = buildBossExplanation(content, unitId, q);
+
+    return {
+      questionId: q.questionId,
+      prompt: q.prompt,
+      meta: q.meta,
+      yourAnswer,
+      correctAnswer: q.correctChoice,
+      isCorrect,
+      explanation,
+    };
+  });
+
   await supabase.from("quiz_runs").delete().eq("id", parsed.data.runId);
 
   return jsonOk({
@@ -140,5 +234,6 @@ export async function POST(req: Request) {
     correct: result.correct,
     total: result.total,
     newBadges,
+    review,
   });
 }
