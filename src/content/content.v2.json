@@ -1,0 +1,347 @@
+{
+  "schemaVersion": 2,
+  "subject": "chinese",
+  "grade": 2,
+  "term": "up",
+  "units": [
+    {
+      "unitId": "u1",
+      "title": "第一单元",
+      "sections": [
+        {
+          "sectionId": "u1.s1",
+          "type": "char_table",
+          "title": "识字表",
+          "items": [
+            { "itemId": "u1.s1.0001", "hanzi": "蝌", "pinyin": "kē", "words": ["蝌蚪"] },
+            { "itemId": "u1.s1.0002", "hanzi": "蚪", "pinyin": "dǒu", "words": ["蝌蚪"] },
+            { "itemId": "u1.s1.0003", "hanzi": "脑", "pinyin": "nǎo", "words": ["大脑", "脑子"] },
+            { "itemId": "u1.s1.0004", "hanzi": "袋", "pinyin": "dài", "words": ["麻袋", "袋子"] },
+            { "itemId": "u1.s1.0005", "hanzi": "灰", "pinyin": "huī", "words": ["灰色", "石灰"] },
+            { "itemId": "u1.s1.0006", "hanzi": "甩", "pinyin": "shuǎi", "words": ["甩动", "甩卖"] },
+            { "itemId": "u1.s1.0007", "hanzi": "活", "pinyin": "huó", "words": ["活力", "生活"] },
+            { "itemId": "u1.s1.0008", "hanzi": "腿", "pinyin": "tuǐ", "words": ["腿脚", "火腿"] },
+            { "itemId": "u1.s1.0009", "hanzi": "迎", "pinyin": "yíng", "words": ["迎接", "欢迎"] },
+            { "itemId": "u1.s1.0010", "hanzi": "龟", "pinyin": "guī", "words": ["乌龟", "海龟"] },
+            { "itemId": "u1.s1.0011", "hanzi": "帕", "pinyin": "pà", "words": ["手帕"] },
+            { "itemId": "u1.s1.0012", "hanzi": "登", "pinyin": "dēng", "words": ["登山", "登记"] }
+          ]
+        },
+        {
+          "sectionId": "u1.s2",
+          "type": "word_list",
+          "title": "词语表（正确拼写）",
+          "items": [
+            { "itemId": "u1.s2.0001", "word": "妈妈", "pinyin": "māma" },
+            { "itemId": "u1.s2.0002", "word": "身子", "pinyin": "shēnzi" },
+            { "itemId": "u1.s2.0003", "word": "他们", "pinyin": "tāmen" },
+            { "itemId": "u1.s2.0004", "word": "看见", "pinyin": "kànjiàn" },
+            { "itemId": "u1.s2.0005", "word": "我们", "pinyin": "wǒmen" },
+            { "itemId": "u1.s2.0006", "word": "哪里", "pinyin": "nǎlǐ" },
+            { "itemId": "u1.s2.0007", "word": "那边", "pinyin": "nàbiān" },
+            { "itemId": "u1.s2.0008", "word": "雪白", "pinyin": "xuěbái" },
+            { "itemId": "u1.s2.0009", "word": "过去", "pinyin": "guòqù" },
+            { "itemId": "u1.s2.0010", "word": "孩子", "pinyin": "háizi" },
+            { "itemId": "u1.s2.0011", "word": "什么", "pinyin": "shénme" },
+            { "itemId": "u1.s2.0012", "word": "太阳", "pinyin": "tàiyáng" },
+            { "itemId": "u1.s2.0013", "word": "天空", "pinyin": "tiānkōng" },
+            { "itemId": "u1.s2.0014", "word": "一起", "pinyin": "yìqǐ" },
+            { "itemId": "u1.s2.0015", "word": "冬天", "pinyin": "dōngtiān" },
+            { "itemId": "u1.s2.0016", "word": "花朵", "pinyin": "huāduǒ" },
+            { "itemId": "u1.s2.0017", "word": "池子", "pinyin": "chízi" },
+            { "itemId": "u1.s2.0018", "word": "江河", "pinyin": "jiānghé" },
+            { "itemId": "u1.s2.0019", "word": "海洋", "pinyin": "hǎiyáng" },
+            { "itemId": "u1.s2.0020", "word": "许多", "pinyin": "xǔduō" },
+            { "itemId": "u1.s2.0021", "word": "田地", "pinyin": "tiándì" },
+            { "itemId": "u1.s2.0022", "word": "工作", "pinyin": "gōngzuò" },
+            { "itemId": "u1.s2.0023", "word": "办法", "pinyin": "bànfǎ" },
+            { "itemId": "u1.s2.0024", "word": "你们", "pinyin": "nǐmen" },
+            { "itemId": "u1.s2.0025", "word": "如果", "pinyin": "rúguǒ" },
+            { "itemId": "u1.s2.0026", "word": "已经", "pinyin": "yǐjīng" },
+            { "itemId": "u1.s2.0027", "word": "长大", "pinyin": "zhǎngdà" },
+            { "itemId": "u1.s2.0028", "word": "告别", "pinyin": "gàobié" },
+            { "itemId": "u1.s2.0029", "word": "四海", "pinyin": "sìhǎi" },
+            { "itemId": "u1.s2.0030", "word": "为家", "pinyin": "wéijiā" },
+            { "itemId": "u1.s2.0031", "word": "自己", "pinyin": "zìjǐ" },
+            { "itemId": "u1.s2.0032", "word": "出发", "pinyin": "chūfā" },
+            { "itemId": "u1.s2.0033", "word": "动物", "pinyin": "dòngwù" },
+            { "itemId": "u1.s2.0034", "word": "胆子", "pinyin": "dǎnzi" },
+            { "itemId": "u1.s2.0035", "word": "肚子", "pinyin": "dùzi" },
+            { "itemId": "u1.s2.0036", "word": "那里", "pinyin": "nàlǐ" },
+            { "itemId": "u1.s2.0037", "word": "知识", "pinyin": "zhīshi" }
+          ]
+        },
+        {
+          "sectionId": "u1.s3",
+          "type": "word_patterns",
+          "title": "词语积累",
+          "patterns": [
+            {
+              "patternId": "u1.wp.1",
+              "patternType": "A哇A",
+              "examples": ["游哇游", "跑哇跑", "找哇找", "飘哇飘", "飞呀飞", "吹呀吹"],
+              "tags": ["u1", "from_md", "mvp"]
+            },
+            {
+              "patternId": "u1.wp.2",
+              "patternType": "ABAC",
+              "examples": ["游来游去", "跑来跑去", "飞来飞去", "爬来爬去", "走来走去", "跳来跳去"],
+              "tags": ["u1", "from_md", "mvp"]
+            },
+            {
+              "patternId": "u1.wp.3",
+              "patternType": "ABAB",
+              "examples": ["极小极小", "金黄金黄", "雪白雪白", "火红火红", "通红通红", "碧绿碧绿"],
+              "tags": ["u1", "from_md", "mvp"]
+            },
+            {
+              "patternId": "u1.wp.4",
+              "patternType": "越X越X",
+              "examples": ["越升越高", "越来越低", "越多越好", "越走越快", "越来越好"],
+              "tags": ["u1", "from_md", "mvp"]
+            },
+            {
+              "patternId": "u1.wp.5",
+              "patternType": "AABB",
+              "examples": ["许许多多", "平平安安", "健健康康", "干干净净", "高高兴兴", "红红火火"],
+              "tags": ["u1", "from_md", "mvp"]
+            }
+          ]
+        },
+        {
+          "sectionId": "u1.s4",
+          "type": "word_disambiguation",
+          "title": "多音字/近反义词/易混词",
+          "items": [
+            {
+              "itemId": "u1.s4.0001",
+              "kind": "polyphone",
+              "hanzi": "教",
+              "options": [
+                {
+                  "pinyin": "jiāo",
+                  "example": "教书",
+                  "sentence": "教(jiāo)书育人是教(jiào)师的使命。"
+                },
+                {
+                  "pinyin": "jiào",
+                  "example": "教室",
+                  "sentence": "教(jiāo)书育人是教(jiào)师的使命。"
+                }
+              ]
+            },
+            {
+              "itemId": "u1.s4.0002",
+              "kind": "polyphone",
+              "hanzi": "种",
+              "options": [
+                {
+                  "pinyin": "zhǒng",
+                  "example": "种类",
+                  "sentence": "妈妈说这种（zhǒng）花很难种（zhòng）活，我们要多用心照顾它。"
+                },
+                {
+                  "pinyin": "zhòng",
+                  "example": "种地",
+                  "sentence": "妈妈说这种（zhǒng）花很难种（zhòng）活，我们要多用心照顾它。"
+                }
+              ]
+            },
+            {
+              "itemId": "u1.s4.0003",
+              "kind": "polyphone",
+              "hanzi": "没",
+              "options": [
+                {
+                  "pinyin": "mò",
+                  "example": "淹没",
+                  "sentence": "洪水淹没(mò)了田地，奶奶种的庄稼都没(méi)了。"
+                },
+                {
+                  "pinyin": "méi",
+                  "example": "没有",
+                  "sentence": "洪水淹没(mò)了田地，奶奶种的庄稼都没(méi)了。"
+                }
+              ]
+            },
+            {
+              "itemId": "u1.s4.0004",
+              "kind": "polyphone",
+              "hanzi": "得",
+              "options": [
+                {
+                  "pinyin": "dé",
+                  "example": "得到",
+                  "sentence": "想取得(dé)好成绩，就得(děi)好好学习，题目观察得(de)仔细些。"
+                },
+                {
+                  "pinyin": "děi",
+                  "example": "就得",
+                  "sentence": "想取得(dé)好成绩，就得(děi)好好学习，题目观察得(de)仔细些。"
+                },
+                {
+                  "pinyin": "de",
+                  "example": "写得好",
+                  "sentence": "想取得(dé)好成绩，就得(děi)好好学习，题目观察得(de)仔细些。"
+                }
+              ]
+            },
+            {
+              "itemId": "u1.s4.0005",
+              "kind": "syn_ant",
+              "word": "快活",
+              "synonym": "快乐",
+              "antonym": "难过"
+            },
+            {
+              "itemId": "u1.s4.0006",
+              "kind": "confusing",
+              "prompt": "选出正确的词语：老师今天来家访，她一进门，我就赶紧___。",
+              "correct": "迎上去",
+              "distractors": ["追上去"],
+              "rule": "“迎上去”表示主动向前迎接对方；“追上去”表示从后面追赶对方。",
+              "examples": ["老师今天来家访，她一进门，我就赶紧迎上去。", "老师走出教室后，我才想起作业没交，连忙追上去。"]
+            },
+            {
+              "itemId": "u1.s4.0007",
+              "kind": "confusing",
+              "prompt": "选出正确的词语：一朵朵白云自由地___在天空中。",
+              "correct": "飘浮",
+              "distractors": ["漂浮"],
+              "rule": "“飘浮”强调风摇动或飞扬；“漂浮”强调停留在液体表面不下沉。",
+              "examples": ["一朵朵白云自由地飘浮在天空中。", "河面上漂浮着一片片树叶，就像一叶叶小舟。"]
+            },
+            {
+              "itemId": "u1.s4.0008",
+              "kind": "confusing",
+              "prompt": "选出正确的词语：老师的态度很___。",
+              "correct": "温和",
+              "distractors": ["温暖"],
+              "rule": "“温和”侧重于气候不冷不热或人的性情、态度、言语不严厉；“温暖”既可形容天气/身心感到暖和，也可形容话语行为使人心里觉得暖和。",
+              "examples": ["老师的态度很温和。", "同学们亲切的话语让我感到很温暖。"]
+            }
+          ]
+        },
+        {
+          "sectionId": "u1.s5",
+          "type": "sentence_pattern",
+          "title": "句子仿写（模板）",
+          "patterns": [
+            {
+              "patternId": "u1.p1",
+              "name": "有时候……有时候……",
+              "template": "有时候{a}，有时候{b}。",
+              "slots": [
+                { "key": "a", "label": "情况A" },
+                { "key": "b", "label": "情况B" }
+              ],
+              "wordBank": {
+                "a": ["我变成小硬球打下来", "太阳躲到云后面"],
+                "b": ["我变成小花朵飘下来", "天空又放晴了"]
+              }
+            },
+            {
+              "patternId": "u1.p2",
+              "name": "只要……就……",
+              "template": "只要{a}，就{b}。",
+              "slots": [
+                { "key": "a", "label": "条件" },
+                { "key": "b", "label": "结果" }
+              ],
+              "wordBank": {
+                "a": ["有风轻轻吹过", "秋风一吹"],
+                "b": ["孩子们就乘着风纷纷出发", "树叶就纷纷飘落下来"]
+              }
+            },
+            {
+              "patternId": "u1.p3",
+              "name": "一边……一边……",
+              "template": "{a}一边{v1}，一边{v2}。",
+              "slots": [
+                { "key": "a", "label": "主语" },
+                { "key": "v1", "label": "动作1" },
+                { "key": "v2", "label": "动作2" }
+              ],
+              "wordBank": {
+                "a": ["我", "小猫"],
+                "v1": ["写作业", "走路"],
+                "v2": ["听音乐", "看风景"]
+              }
+            }
+          ]
+        },
+        {
+          "sectionId": "u1.b1",
+          "type": "poem",
+          "title": "古诗二首（Boss）",
+          "poems": [
+            {
+              "poemId": "u1.poem1",
+              "title": "登鹳雀楼",
+              "author": "王之涣",
+              "lines": ["白日依山尽", "黄河入海流", "欲穷千里目", "更上一层楼"]
+            },
+            {
+              "poemId": "u1.poem2",
+              "title": "望庐山瀑布",
+              "author": "李白",
+              "lines": ["日照香炉生紫烟", "遥看瀑布挂前川", "飞流直下三千尺", "疑是银河落九天"]
+            }
+          ]
+        },
+        {
+          "sectionId": "u1.b2",
+          "type": "reading_comprehension",
+          "title": "课文理解（Boss样例）",
+          "passages": [
+            {
+              "passageId": "u1.read1",
+              "title": "阅读的乐趣（节选）",
+              "text": "阅读给我带来了许多乐趣。班会课上，老师给我们讲了一个很有趣的故事。",
+              "questions": [
+                {
+                  "questionId": "u1.read1.q1",
+                  "kind": "true_false",
+                  "prompt": "作者觉得阅读很有趣。",
+                  "answer": true
+                },
+                {
+                  "questionId": "u1.read1.q2",
+                  "kind": "mcq",
+                  "prompt": "故事发生在什么课上？",
+                  "choices": ["班会课", "体育课", "美术课", "音乐课"],
+                  "correctChoice": "班会课"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "unitId": "u2",
+      "title": "第二单元",
+      "sections": [
+        {
+          "sectionId": "u2.s1",
+          "type": "char_table",
+          "title": "识字表（占位）",
+          "items": [
+            { "itemId": "u2.s1.0001", "hanzi": "山", "pinyin": "shān", "words": ["大山"] },
+            { "itemId": "u2.s1.0002", "hanzi": "水", "pinyin": "shuǐ", "words": ["河水"] },
+            { "itemId": "u2.s1.0003", "hanzi": "花", "pinyin": "huā", "words": ["花朵"] },
+            { "itemId": "u2.s1.0004", "hanzi": "风", "pinyin": "fēng", "words": ["大风"] },
+            { "itemId": "u2.s1.0005", "hanzi": "雨", "pinyin": "yǔ", "words": ["下雨"] },
+            { "itemId": "u2.s1.0006", "hanzi": "云", "pinyin": "yún", "words": ["白云"] },
+            { "itemId": "u2.s1.0007", "hanzi": "鸟", "pinyin": "niǎo", "words": ["小鸟"] },
+            { "itemId": "u2.s1.0008", "hanzi": "鱼", "pinyin": "yú", "words": ["小鱼"] },
+            { "itemId": "u2.s1.0009", "hanzi": "星", "pinyin": "xīng", "words": ["星星"] },
+            { "itemId": "u2.s1.0010", "hanzi": "月", "pinyin": "yuè", "words": ["月亮"] },
+            { "itemId": "u2.s1.0011", "hanzi": "日", "pinyin": "rì", "words": ["日子"] },
+            { "itemId": "u2.s1.0012", "hanzi": "光", "pinyin": "guāng", "words": ["阳光"] }
+          ]
+        }
+      ]
+    }
+  ]
+}

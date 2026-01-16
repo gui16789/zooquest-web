@@ -1,6 +1,6 @@
 import "server-only";
 
-import content from "@/content/content.v1.json";
+import content from "@/content/content.v2.json";
 import type { ContentSchema } from "@/domain/content/types";
 
 export function getContent(): ContentSchema {

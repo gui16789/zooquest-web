@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 
+type KnowledgeRefs = [string] | [string, string];
+
 type McqQuestionBase = {
   questionId: string;
   prompt: string;
   choices: string[];
+  knowledgeRefs: KnowledgeRefs;
 };
 
 type RunQuestion =
@@ -15,10 +18,14 @@ type RunQuestion =
   | (McqQuestionBase & { type: "mcq_hanzi_by_pinyin"; pinyin: string })
   | (McqQuestionBase & { type: "mcq_polyphone"; hanzi: string; example: string })
   | (McqQuestionBase & { type: "mcq_syn_ant" })
+  | (McqQuestionBase & { type: "mcq_confusing"; rule?: string; examples?: string[] })
+  | (McqQuestionBase & { type: "mcq_word_spelling"; pinyin?: string })
+  | (McqQuestionBase & { type: "mcq_word_pattern_match"; patternType: string })
   | {
       questionId: string;
       type: "sentence_pattern_fill";
       prompt: string;
+      knowledgeRefs: KnowledgeRefs;
       template: string;
       slots: Array<{ key: string; label: string }>;
       wordBank: Record<string, string[]>;
@@ -49,11 +56,13 @@ type CheckResponse =
   | {
       isCorrect: boolean;
       explanation: string;
+      knowledgeRefs: KnowledgeRefs;
       correct: { kind: "mcq"; choice: string };
     }
   | {
       isCorrect: boolean;
       explanation: string;
+      knowledgeRefs: KnowledgeRefs;
       correct: { kind: "sentence_pattern_fill"; payload: Record<string, string>; preview: string };
     };
 
