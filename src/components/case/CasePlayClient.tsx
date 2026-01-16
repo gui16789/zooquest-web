@@ -129,6 +129,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   const [error, setError] = useState<string | null>(null);
   const [clues, setClues] = useState<Array<{ id: string; name: string }>>([]);
   const [pendingClue, setPendingClue] = useState<{ id: string; name: string } | null>(null);
+  const [viewMode, setViewMode] = useState<'map' | 'scene'>('map');
 
   const sceneId = SCENE_ORDER[sceneIndex] ?? "s1";
 
@@ -144,6 +145,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
     setPendingClue(null);
     setSceneIndex(0);
     setCurrentIndex(0);
+    setViewMode('map');
 
     fetch("/api/progress")
       .then((res) => res.json())
@@ -178,9 +180,11 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   }
 
   useEffect(() => {
-    void startScene(sceneId).catch((e) => setError(e instanceof Error ? e.message : "STORY_RUN_START_FAILED"));
+    if (viewMode === 'scene') {
+      void startScene(sceneId).catch((e) => setError(e instanceof Error ? e.message : "STORY_RUN_START_FAILED"));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.unitId, sceneIndex]);
+  }, [props.unitId, sceneIndex, viewMode]);
 
   async function checkCurrent() {
     if (!run || !currentQuestion) return;
@@ -270,11 +274,11 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   function handleClueDismiss() {
     setPendingClue(null);
     const nextSceneIndex = sceneIndex + 1;
-    if (nextSceneIndex >= SCENE_ORDER.length) {
-      props.onBoss();
-      return;
+    // Don't auto-advance to boss or scene, just unlock locally and return to map
+    if (nextSceneIndex < SCENE_ORDER.length) {
+       setSceneIndex(nextSceneIndex);
     }
-    setSceneIndex(nextSceneIndex);
+    setViewMode('map');
   }
 
   if (error) {
@@ -284,12 +288,155 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
         <Button type="button" onClick={() => void startScene(sceneId)}>
           重新开始本场景
         </Button>
-        <Button type="button" variant="ghost" onClick={props.onExit}>
+        <Button type="button" variant="ghost" onClick={() => setViewMode('map')}>
           返回地图
         </Button>
       </div>
     );
   }
+
+  // --- MAP MODE ---
+  if (viewMode === 'map') {
+    const totalClues = 3;
+    const collectedCount = clues.length;
+    
+    // Nodes configuration
+    // S1, S2, S3, Boss
+    const nodes = [
+      { id: 's1', label: '现场', x: 20, y: 80 },
+      { id: 's2', label: '证人', x: 80, y: 50 },
+      { id: 's3', label: '密室', x: 20, y: 20 },
+      { id: 'boss', label: '指证', x: 50, y: 5, isBoss: true }
+    ];
+
+    return (
+      <div className="w-full max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
+         {/* Header / HUD */}
+         <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-zinc-100">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xl ring-4 ring-blue-50">
+                 {Math.round((collectedCount / totalClues) * 100)}%
+              </div>
+              <div>
+                 <div className="text-sm font-bold text-zinc-900">案情进度</div>
+                 <div className="text-xs text-zinc-500 font-mono">CASE PROGRESS</div>
+              </div>
+            </div>
+            <div className="flex gap-6 text-right">
+               <div>
+                  <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Locations</div>
+                  <div className="font-mono font-bold text-zinc-700">{Math.min(collectedCount + 1, 3)}/3</div>
+               </div>
+               <div>
+                  <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Clues</div>
+                  <div className={`font-mono font-bold ${collectedCount >= 3 ? 'text-green-600' : 'text-amber-500'}`}>
+                    {collectedCount}/3
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         {/* Map Container */}
+         <div className="relative aspect-[4/3] w-full rounded-2xl bg-zinc-50 border border-zinc-200 shadow-inner overflow-hidden">
+            {/* Grid Pattern Background */}
+            <div className="absolute inset-0 opacity-[0.03]" 
+                 style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+            />
+
+            {/* SVG Path */}
+            <svg className="absolute inset-0 h-full w-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+               {/* Connecting path */}
+               <path 
+                 d="M 20 80 C 50 80, 50 50, 80 50 C 110 50, 50 50, 20 20 C -10 -10, 50 20, 50 15" 
+                 fill="none" 
+                 stroke="#e4e4e7" 
+                 strokeWidth="2" 
+                 strokeDasharray="4 4"
+               />
+               <path 
+                 d="M 20 80 C 50 80, 50 50, 80 50 C 110 50, 50 50, 20 20 C -10 -10, 50 20, 50 15" 
+                 fill="none" 
+                 stroke={collectedCount >= 3 ? "#10b981" : "#3b82f6"} 
+                 strokeWidth="2"
+                 strokeDasharray="1000"
+                 strokeDashoffset={1000 - (collectedCount * 333)} 
+                 className="transition-all duration-1000 ease-out"
+               />
+            </svg>
+
+            {/* Nodes */}
+            {nodes.map((node, index) => {
+               // Determine state
+               // Map nodes to scene indices: 0, 1, 2. Boss is separate.
+               let status: 'locked' | 'current' | 'completed' = 'locked';
+               
+               if (node.isBoss) {
+                  status = collectedCount >= 3 ? 'current' : 'locked';
+               } else {
+                  if (collectedCount > index) status = 'completed';
+                  else if (collectedCount === index) status = 'current';
+                  else status = 'locked';
+               }
+
+               const isBoss = node.isBoss;
+
+               return (
+                 <button
+                   key={node.id}
+                   disabled={status === 'locked'}
+                   onClick={() => {
+                      if (isBoss) {
+                         props.onBoss();
+                      } else {
+                         setSceneIndex(index);
+                         setViewMode('scene');
+                      }
+                   }}
+                   className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-300 group
+                     ${status === 'locked' ? 'cursor-not-allowed opacity-60 grayscale' : 'cursor-pointer hover:scale-110'}
+                   `}
+                   style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                 >
+                    {/* Node Circle */}
+                    <div className={`
+                       relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg border-4 z-10 bg-white
+                       ${status === 'completed' ? 'border-green-500 text-green-600' : ''}
+                       ${status === 'current' ? 'border-blue-500 text-blue-600 animate-pulse ring-4 ring-blue-500/20' : ''}
+                       ${status === 'locked' ? 'border-zinc-300 text-zinc-300 bg-zinc-50' : ''}
+                       ${isBoss && status === 'current' ? 'border-amber-500 text-amber-600 ring-amber-500/30' : ''}
+                    `}>
+                       {status === 'completed' ? (
+                          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                       ) : status === 'locked' ? (
+                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                       ) : isBoss ? (
+                          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                       ) : (
+                          <span className="text-xl font-bold">{index + 1}</span>
+                       )}
+                       
+                       {/* Label */}
+                       <div className={`absolute -bottom-8 whitespace-nowrap text-xs font-bold px-2 py-1 rounded-full bg-white/80 backdrop-blur-sm border shadow-sm
+                          ${status === 'current' ? 'text-blue-700 border-blue-200' : 'text-zinc-500 border-zinc-200'}
+                       `}>
+                          {node.label}
+                       </div>
+                    </div>
+                 </button>
+               );
+            })}
+         </div>
+
+         <div className="flex justify-center">
+            <Button variant="ghost" className="text-zinc-400 hover:text-zinc-600" onClick={props.onExit}>
+               返回首页
+            </Button>
+         </div>
+      </div>
+    );
+  }
+
+  // --- SCENE MODE (Existing Logic) ---
 
   if (!run || !currentQuestion) {
     return <div className="text-sm text-zinc-600 animate-pulse">案件加载中…</div>;
@@ -548,7 +695,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
             ) : null}
 
             <div className="mt-8 flex items-center justify-between border-t border-zinc-100 pt-6">
-                <Button type="button" variant="ghost" onClick={props.onExit} className="text-zinc-400 hover:text-zinc-600">
+                <Button type="button" variant="ghost" onClick={() => setViewMode('map')} className="text-zinc-400 hover:text-zinc-600">
                     暂时撤退
                 </Button>
             {hasFeedback ? (
