@@ -303,10 +303,10 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
     // Nodes configuration
     // S1, S2, S3, Boss
     const nodes = [
-      { id: 's1', label: '现场', x: 20, y: 80 },
-      { id: 's2', label: '证人', x: 80, y: 50 },
-      { id: 's3', label: '密室', x: 20, y: 20 },
-      { id: 'boss', label: '指证', x: 50, y: 5, isBoss: true }
+      { id: 's1', label: '甜甜圈摊位', x: 20, y: 80 },
+      { id: 's2', label: '雨林区管道', x: 80, y: 50 },
+      { id: 's3', label: '闪电档案室', x: 20, y: 20 },
+      { id: 'boss', label: '审讯室', x: 50, y: 5, isBoss: true }
     ];
 
     return (
@@ -474,7 +474,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
                     <div className={`shrink-0 text-sm font-bold uppercase tracking-wider w-16 text-right pt-1 ${i % 2 === 0 ? 'text-blue-400' : 'text-amber-400'}`}>
                         {i % 2 === 0 ? briefing.chief.name : briefing.partner.name}
                     </div>
-                    <div className="text-lg leading-relaxed text-zinc-200 font-medium">{line}</div>
+                     <div className="text-lg leading-relaxed text-zinc-200 font-medium">{line.replace("{nickname}", kidName)}</div>
                  </div>
                ))}
             </div>
