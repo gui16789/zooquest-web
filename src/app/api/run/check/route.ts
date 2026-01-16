@@ -128,6 +128,65 @@ export async function POST(req: Request) {
   const isCorrect = graded.details[0]?.isCorrect ?? false;
   const explanation = buildExplanation(content, unitId, question);
 
+  // KP event capture + stats aggregation (best-effort, don't break gameplay on DB errors)
+  try {
+    const nowIso = new Date().toISOString();
+    const knowledgeRefs = question.knowledgeRefs;
+
+    const { error: eventError } = await supabase.from("kp_events").insert(
+      knowledgeRefs.map((kpId) => ({
+        kid_user_id: user.kidUserId,
+        unit_id: unitId,
+        run_id: parsed.data.runId,
+        question_id: parsed.data.questionId,
+        kp_id: kpId,
+        is_correct: isCorrect,
+        created_at: nowIso,
+      })),
+    );
+
+    if (!eventError) {
+      const delta = isCorrect ? 20 : -25;
+
+      for (const kpId of knowledgeRefs) {
+        const { data: existing, error: selectError } = await supabase
+          .from("kp_stats")
+          .select("seen_count, correct_count, wrong_count, mastery_score")
+          .eq("kid_user_id", user.kidUserId)
+          .eq("unit_id", unitId)
+          .eq("kp_id", kpId)
+          .maybeSingle();
+
+        if (selectError) continue;
+
+        const prevSeen = (existing?.seen_count as number | undefined) ?? 0;
+        const prevCorrect = (existing?.correct_count as number | undefined) ?? 0;
+        const prevWrong = (existing?.wrong_count as number | undefined) ?? 0;
+        const prevMastery = (existing?.mastery_score as number | undefined) ?? 0;
+
+        const nextSeen = prevSeen + 1;
+        const nextCorrect = prevCorrect + (isCorrect ? 1 : 0);
+        const nextWrong = prevWrong + (isCorrect ? 0 : 1);
+        const nextMastery = Math.max(0, Math.min(100, prevMastery + delta));
+
+        await supabase.from("kp_stats").upsert({
+          kid_user_id: user.kidUserId,
+          unit_id: unitId,
+          kp_id: kpId,
+          seen_count: nextSeen,
+          correct_count: nextCorrect,
+          wrong_count: nextWrong,
+          mastery_score: nextMastery,
+          last_seen_at: nowIso,
+          updated_at: nowIso,
+        });
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+
   if (question.type === "sentence_pattern_fill") {
     const correctPreview = question.template.replace(/\{(.*?)\}/g, (_, key) => question.correct[key] ?? "____");
     return jsonOk({
