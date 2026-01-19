@@ -66,7 +66,14 @@ type Growth = {
   level: number;
   title: string;
   xp: number;
-  maxXp: number;
+};
+
+type GrowthUpdate = {
+  xp: number;
+  level: number;
+  title: string;
+  leveledUp: boolean;
+  xpGained: number;
 };
 
 type CheckResponse =
@@ -75,18 +82,14 @@ type CheckResponse =
       explanation: string;
       knowledgeRefs: KnowledgeRefs;
       correct: { kind: "mcq"; choice: string };
-      growth?: Growth;
-      leveledUp?: boolean;
-      xpGained?: number;
+      growth?: GrowthUpdate | null;
     }
   | {
       isCorrect: boolean;
       explanation: string;
       knowledgeRefs: KnowledgeRefs;
       correct: { kind: "sentence_pattern_fill"; payload: Record<string, string>; preview: string };
-      growth?: Growth;
-      leveledUp?: boolean;
-      xpGained?: number;
+      growth?: GrowthUpdate | null;
     };
 
 type FeedbackState = {
@@ -108,6 +111,40 @@ function isAnswered(q: StoryQuestion, a: AnswerState | undefined): boolean {
   return typeof a.choice === "string" && a.choice.length > 0;
 }
 
+function getScenePrefix(sceneId: SceneId): string {
+  switch (sceneId) {
+    case "s1":
+      return "（甜甜圈摊位）";
+    case "s2":
+      return "（雨林区管道）";
+    case "s3":
+      return "（闪电档案室）";
+  }
+}
+
+function getStoryLine(sceneId: SceneId, question: StoryQuestion): string {
+  const prefix = getScenePrefix(sceneId);
+
+  switch (question.type) {
+    case "mcq_pinyin":
+      return `${prefix}【证物标签】“${question.hanzi}”该怎么读？读错就对不上证物。`;
+    case "mcq_hanzi_by_pinyin":
+      return `${prefix}【登记簿】听到拼音“${question.pinyin}”，应该是哪一个字？`;
+    case "mcq_polyphone":
+      return `${prefix}【口供比对】同一个字在不同句子读音不同，看看语境。`;
+    case "mcq_confusing":
+      return `${prefix}【拆穿伪证】选对词，才能识别谁在撒谎。`;
+    case "mcq_syn_ant":
+      return `${prefix}【线索对照】挑出最匹配的词，线索才能成立。`;
+    case "mcq_word_spelling":
+      return `${prefix}【证物匹配】拼音“${question.pinyin ?? ""}”对应的词是？`.replace(/“”/, "");
+    case "mcq_word_pattern_match":
+      return `${prefix}【关键词归档】找出符合词语结构的证物编号。`;
+    case "sentence_pattern_fill":
+      return `${prefix}【结案陈词】按句式补全，证据才能立得住。`;
+  }
+}
+
 const SCENE_ORDER: SceneId[] = ["s1", "s2", "s3"];
 
 export function CasePlayClient(props: { unitId: string; onExit: () => void; onBoss: () => void }) {
@@ -122,8 +159,11 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   const [feedbackByQuestionId, setFeedbackByQuestionId] = useState<Record<string, FeedbackState>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [checking, setChecking] = useState(false);
+  const [advanceTick, setAdvanceTick] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [clues, setClues] = useState<Array<{ id: string; name: string }>>([]);
+  const [pendingClue, setPendingClue] = useState<{ id: string; name: string } | null>(null);
+  const [viewMode, setViewMode] = useState<'map' | 'scene'>('map');
 
   const sceneId = SCENE_ORDER[sceneIndex] ?? "s1";
 
@@ -134,6 +174,13 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
 
 
   useEffect(() => {
+    // Case clue progress is local per playthrough.
+    setClues([]);
+    setPendingClue(null);
+    setSceneIndex(0);
+    setCurrentIndex(0);
+    setViewMode('map');
+
     fetch("/api/progress")
       .then((res) => res.json())
       .then((json) => {
@@ -142,7 +189,9 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
           if (json.data.growth) setGrowth(json.data.growth);
         }
       })
-      .catch(() => { /* ignore */ });
+      .catch(() => {
+        /* ignore */
+      });
   }, [props.unitId]);
 
   async function startScene(nextSceneId: SceneId) {
@@ -165,9 +214,11 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   }
 
   useEffect(() => {
-    void startScene(sceneId).catch((e) => setError(e instanceof Error ? e.message : "STORY_RUN_START_FAILED"));
+    if (viewMode === 'scene') {
+      void startScene(sceneId).catch((e) => setError(e instanceof Error ? e.message : "STORY_RUN_START_FAILED"));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.unitId, sceneIndex]);
+  }, [props.unitId, sceneIndex, viewMode]);
 
   async function checkCurrent() {
     if (!run || !currentQuestion) return;
@@ -196,17 +247,16 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
       const data = json.data as CheckResponse;
       const correctText = data.correct.kind === "mcq" ? data.correct.choice : `参考：${data.correct.preview}`;
 
-      if (data.growth) {
-        setGrowth(data.growth);
-      }
-      
-      if (data.leveledUp && data.growth) {
-        setToast({ message: `升级！${data.growth.title}（Lv.${data.growth.level}）`, type: "levelup" });
+      const g = data.growth ?? null;
+      if (g) setGrowth(g);
+
+      if (g?.leveledUp) {
+        setToast({ message: `升级！${g.title}（Lv.${g.level}）`, type: "levelup" });
         setTimeout(() => setToast(null), 4000);
-      } else if (data.xpGained) {
-        setToast({ 
-          message: data.isCorrect ? `证据成立 +${data.xpGained}XP` : `继续努力 +${data.xpGained}XP`, 
-          type: "xp" 
+      } else if (g?.xpGained) {
+        setToast({
+          message: data.isCorrect ? `证据成立 +${g.xpGained}XP` : `继续努力 +${g.xpGained}XP`,
+          type: "xp",
         });
         setTimeout(() => setToast(null), 2500);
       }
@@ -229,27 +279,40 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
   function next() {
     if (!run) return;
 
+    // Clear feedback for current question so the next step is interactive.
+    if (currentQuestion) {
+      setFeedbackByQuestionId((prev) => {
+        if (!(currentQuestion.questionId in prev)) return prev;
+        const next = { ...prev };
+        delete next[currentQuestion.questionId];
+        return next;
+      });
+    }
+
     const isLast = currentIndex >= run.questions.length - 1;
     if (isLast) {
       // Clear scene: award clue and advance.
+      const clue = run.story.clue;
       setClues((prev) => {
-        const clue = run.story.clue;
         if (prev.some((c) => c.id === clue.id)) return prev;
         return [...prev, clue];
       });
-
-      const nextSceneIndex = sceneIndex + 1;
-       if (nextSceneIndex >= SCENE_ORDER.length) {
-         // MVP: once 3 clues collected, go to boss.
-         props.onBoss();
-         return;
-       }
-
-      setSceneIndex(nextSceneIndex);
+      setPendingClue(clue);
       return;
     }
 
     setCurrentIndex((i) => Math.min(i + 1, run.questions.length - 1));
+    setAdvanceTick((t) => t + 1);
+  }
+
+  function handleClueDismiss() {
+    setPendingClue(null);
+    const nextSceneIndex = sceneIndex + 1;
+    // Don't auto-advance to boss or scene, just unlock locally and return to map
+    if (nextSceneIndex < SCENE_ORDER.length) {
+       setSceneIndex(nextSceneIndex);
+    }
+    setViewMode('map');
   }
 
   if (error) {
@@ -259,12 +322,232 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
         <Button type="button" onClick={() => void startScene(sceneId)}>
           重新开始本场景
         </Button>
-        <Button type="button" variant="ghost" onClick={props.onExit}>
+        <Button type="button" variant="ghost" onClick={() => setViewMode('map')}>
           返回地图
         </Button>
       </div>
     );
   }
+
+  // --- MAP MODE ---
+  if (viewMode === 'map') {
+    const totalClues = 3;
+    const collectedCount = clues.length;
+    
+    // Nodes configuration
+    // S1, S2, S3, Boss
+    const nodes = [
+      { 
+        id: 's1', 
+        label: '甜甜圈摊位', 
+        x: 20, 
+        y: 80,
+        icon: (
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="3" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3" opacity="0.3" />
+          </svg>
+        )
+      },
+      { 
+        id: 's2', 
+        label: '雨林区管道', 
+        x: 80, 
+        y: 50,
+        icon: (
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21V3" />
+          </svg>
+        )
+      },
+      { 
+        id: 's3', 
+        label: '闪电档案室', 
+        x: 20, 
+        y: 20,
+        icon: (
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+             <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+          </svg>
+        )
+      },
+      { 
+        id: 'boss', 
+        label: '审讯室', 
+        x: 50, 
+        y: 5, 
+        isBoss: true,
+        icon: (
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      }
+    ];
+
+    return (
+      <div className="w-full max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
+         {/* Header / HUD */}
+         <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-zinc-100">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xl ring-4 ring-blue-50">
+                 {Math.round((collectedCount / totalClues) * 100)}%
+              </div>
+              <div>
+                 <div className="text-sm font-bold text-zinc-900">案情进度</div>
+                 <div className="text-xs text-zinc-500 font-mono">CASE PROGRESS</div>
+              </div>
+            </div>
+            <div className="flex gap-6 text-right">
+               <div>
+                  <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Locations</div>
+                  <div className="font-mono font-bold text-zinc-700">{Math.min(collectedCount + 1, 3)}/3</div>
+               </div>
+               <div>
+                  <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Clues</div>
+                  <div className={`font-mono font-bold ${collectedCount >= 3 ? 'text-green-600' : 'text-amber-500'}`}>
+                    {collectedCount}/3
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-bold text-amber-800">线索袋</div>
+                <div className="text-xs text-amber-700/70">已收集 {collectedCount}/3</div>
+              </div>
+              <div className="flex items-center gap-2">
+                {[0, 1, 2].map((idx) => {
+                  const hasClue = clues[idx];
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border text-xs font-bold ${
+                        hasClue ? "border-amber-500 bg-amber-200 text-amber-900" : "border-amber-200 bg-white text-amber-300"
+                      }`}
+                      title={hasClue ? hasClue.name : "未收集"}
+                    >
+                      {hasClue ? idx + 1 : "?"}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {clues.length > 0 && (
+              <div className="mt-3 space-y-1 text-xs text-amber-900/80">
+                {clues.map((clue) => (
+                  <div key={clue.id} className="flex items-center gap-2">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    <span>{clue.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+         </div>
+
+         {/* Map Container */}
+         <div className="relative aspect-[4/3] w-full rounded-2xl bg-zinc-50 border border-zinc-200 shadow-inner overflow-hidden">
+            {/* Grid Pattern Background */}
+            <div className="absolute inset-0 opacity-[0.03]" 
+                 style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+            />
+
+            {/* SVG Path */}
+            <svg className="absolute inset-0 h-full w-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+               {/* Connecting path */}
+               <path 
+                 d="M 20 80 C 50 80, 50 50, 80 50 C 110 50, 50 50, 20 20 C -10 -10, 50 20, 50 15" 
+                 fill="none" 
+                 stroke="#e4e4e7" 
+                 strokeWidth="2" 
+                 strokeDasharray="4 4"
+               />
+               <path 
+                 d="M 20 80 C 50 80, 50 50, 80 50 C 110 50, 50 50, 20 20 C -10 -10, 50 20, 50 15" 
+                 fill="none" 
+                 stroke={collectedCount >= 3 ? "#10b981" : "#3b82f6"} 
+                 strokeWidth="2"
+                 strokeDasharray="1000"
+                 strokeDashoffset={1000 - (collectedCount * 333)} 
+                 className="transition-all duration-1000 ease-out"
+               />
+            </svg>
+
+            {/* Nodes */}
+            {nodes.map((node, index) => {
+               // Determine state
+               // Map nodes to scene indices: 0, 1, 2. Boss is separate.
+               let status: 'locked' | 'current' | 'completed' = 'locked';
+               
+               if (node.isBoss) {
+                  status = collectedCount >= 3 ? 'current' : 'locked';
+               } else {
+                  if (collectedCount > index) status = 'completed';
+                  else if (collectedCount === index) status = 'current';
+                  else status = 'locked';
+               }
+
+               const isBoss = node.isBoss;
+
+               return (
+                 <button
+                   key={node.id}
+                   disabled={status === 'locked'}
+                   onClick={() => {
+                      if (isBoss) {
+                         props.onBoss();
+                      } else {
+                         setSceneIndex(index);
+                         setViewMode('scene');
+                      }
+                   }}
+                   className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-300 group
+                     ${status === 'locked' ? 'cursor-not-allowed opacity-60 grayscale' : 'cursor-pointer hover:scale-110'}
+                   `}
+                   style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                 >
+                    {/* Node Circle */}
+                    <div className={`
+                       relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg border-4 z-10 bg-white
+                       ${status === 'completed' ? 'border-green-500 text-green-600' : ''}
+                       ${status === 'current' ? 'border-blue-500 text-blue-600 animate-pulse ring-4 ring-blue-500/20' : ''}
+                       ${status === 'locked' ? 'border-zinc-300 text-zinc-300 bg-zinc-50' : ''}
+                       ${isBoss && status === 'current' ? 'border-amber-500 text-amber-600 ring-amber-500/30' : ''}
+                    `}>
+                       {status === 'completed' ? (
+                          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                       ) : status === 'locked' ? (
+                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                       ) : (
+                          node.icon
+                       )}
+                       
+                       {/* Label */}
+                       <div className={`absolute -bottom-8 whitespace-nowrap text-xs font-bold px-2 py-1 rounded-full bg-white/80 backdrop-blur-sm border shadow-sm
+                          ${status === 'current' ? 'text-blue-700 border-blue-200' : 'text-zinc-500 border-zinc-200'}
+                       `}>
+                          {node.label}
+                       </div>
+                    </div>
+                 </button>
+               );
+            })}
+         </div>
+
+         <div className="flex justify-center">
+            <Button variant="ghost" className="text-zinc-400 hover:text-zinc-600" onClick={props.onExit}>
+               返回首页
+            </Button>
+         </div>
+      </div>
+    );
+  }
+
+  // --- SCENE MODE (Existing Logic) ---
 
   if (!run || !currentQuestion) {
     return <div className="text-sm text-zinc-600 animate-pulse">案件加载中…</div>;
@@ -291,26 +574,87 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
             <div className="bg-zinc-950 px-6 py-4 border-b border-zinc-800 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"/>
-                    <h2 className="text-sm font-mono tracking-widest text-zinc-400">MISSION BRIEFING // TOP SECRET</h2>
+                    <h2 className="text-sm font-mono tracking-widest text-zinc-400">ZPD 案件简报</h2>
                 </div>
                 <div className="text-xs font-mono text-zinc-600">{new Date().toLocaleDateString()}</div>
             </div>
             
             <div className="p-8 space-y-6">
-               {briefing.introLines.map((line, i) => (
-                 <div key={i} className="flex gap-4">
-                    <div className={`shrink-0 text-sm font-bold uppercase tracking-wider w-16 text-right pt-1 ${i % 2 === 0 ? 'text-blue-400' : 'text-amber-400'}`}>
-                        {i % 2 === 0 ? briefing.chief.name : briefing.partner.name}
+                {briefing.introLines.map((line, i) => (
+                  <div key={i} className="flex items-start gap-4">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-bold ${
+                        i % 2 === 0 ? "border-blue-400 text-blue-300" : "border-amber-400 text-amber-300"
+                      }`}
+                    >
+                      {i % 2 === 0 ? "局" : "狐"}
                     </div>
-                    <div className="text-lg leading-relaxed text-zinc-200 font-medium">{line}</div>
-                 </div>
-               ))}
+                    <div>
+                      <div className={`text-xs font-bold uppercase tracking-wider ${i % 2 === 0 ? "text-blue-300" : "text-amber-300"}`}>
+                        {i % 2 === 0 ? briefing.chief.name : briefing.partner.name}
+                      </div>
+                      <div className="text-lg leading-relaxed text-zinc-200 font-medium">
+                        {line.replace("{nickname}", kidName)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
             </div>
 
             <div className="bg-zinc-950 p-6 border-t border-zinc-800">
                 <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-6 text-lg tracking-widest uppercase" onClick={() => setShowBriefing(false)}>
-                    开始行动 (Accept Mission)
+                    开始行动
                 </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clue Acquired Overlay */}
+      {pendingClue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/95 p-4 animate-in fade-in duration-300 backdrop-blur-sm">
+          <div className="w-full max-w-md overflow-hidden rounded-xl border border-amber-500/50 bg-zinc-900 shadow-2xl ring-1 ring-amber-500/20">
+            <div className="bg-amber-950/30 px-6 py-4 border-b border-amber-500/30 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                <h2 className="text-sm font-mono tracking-widest text-amber-500">EVIDENCE ACQUIRED</h2>
+              </div>
+              <div className="text-xs font-mono text-amber-700/50">CASE FILE UPDATE</div>
+            </div>
+
+            <div className="p-8 text-center space-y-6">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10 ring-1 ring-amber-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)]">
+                <svg className="h-10 w-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">New Clue Obtained</div>
+                <h3 className="text-2xl font-bold text-white tracking-tight">{pendingClue.name}</h3>
+                {run?.story.briefing?.successLine && (
+                   <div className="mt-2 inline-block rounded border border-amber-500/30 bg-amber-500/10 px-3 py-1">
+                     <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500">结案播报 (Report)</div>
+                     <div className="text-sm font-medium text-amber-200">
+                       {run.story.briefing.successLine}
+                     </div>
+                   </div>
+                )}
+              </div>
+
+              <div className="inline-flex items-center gap-3 rounded-full bg-zinc-800/50 px-4 py-1.5 ring-1 ring-white/10">
+                <span className="text-xs font-medium text-zinc-400">Total Clues:</span>
+                <span className="font-mono text-lg font-bold text-amber-500">{Math.min(clues.length, 3)}/3</span>
+              </div>
+            </div>
+
+            <div className="bg-zinc-950 p-6 border-t border-zinc-800">
+              <Button 
+                className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-6 text-lg tracking-widest uppercase shadow-[0_0_20px_-5px_rgba(217,119,6,0.5)] transition-all hover:shadow-[0_0_30px_-5px_rgba(217,119,6,0.7)]" 
+                onClick={handleClueDismiss}
+              >
+                {clues.length >= 3 ? "进入审讯 (Interrogate)" : "前往下一地点 (Next)"}
+              </Button>
             </div>
           </div>
         </div>
@@ -332,7 +676,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
                           </div>
                           {growth ? (
                               <div className="mt-1 h-1.5 w-24 rounded-full bg-zinc-200 overflow-hidden">
-                                  <div className="h-full bg-blue-500" style={{ width: `${Math.min((growth.xp / growth.maxXp) * 100, 100)}%` }} />
+                                  <div className="h-full bg-blue-500" style={{ width: `${Math.min(((growth.xp % 120) / 120) * 100, 100)}%` }} />
                               </div>
                           ) : (
                               <div className="text-xs text-zinc-400">身份验证中...</div>
@@ -360,15 +704,19 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
           </div>
         
         {/* Question Card */}
-        <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm relative overflow-hidden">
+        <div key={`q-${currentQuestion.questionId}-${advanceTick}`} className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <div className="h-24 w-24 rounded-full border-4 border-black"/>
           </div>
           
           <div className="relative">
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-3 flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded bg-zinc-900 text-xs font-bold text-white">Q</span>
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">{currentQuestion.taskLabel}</span>
+            </div>
+
+            <div className="mb-3 rounded-md bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-600">
+              {getStoryLine(sceneId, currentQuestion)}
             </div>
             
             <div className="text-lg font-medium leading-relaxed text-zinc-900">{currentQuestion.prompt}</div>
@@ -481,7 +829,7 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
             ) : null}
 
             <div className="mt-8 flex items-center justify-between border-t border-zinc-100 pt-6">
-                <Button type="button" variant="ghost" onClick={props.onExit} className="text-zinc-400 hover:text-zinc-600">
+                <Button type="button" variant="ghost" onClick={() => setViewMode('map')} className="text-zinc-400 hover:text-zinc-600">
                     暂时撤退
                 </Button>
             {hasFeedback ? (
