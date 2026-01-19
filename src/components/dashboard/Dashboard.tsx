@@ -24,14 +24,14 @@ type BadgeRow = {
 
 // 8 Zones Configuration with Local Assets
 const ZOO_ZONES: Record<string, { name: string; char: string; color: string; pos: string; img: string }> = {
-  u1: { name: "哺乳动物大都会", char: "轰鸣警官", color: "bg-blue-600", pos: "left-[50%] top-[10%]", img: "/assets/avatar-1.png" },
-  u2: { name: "撒哈拉广场", char: "豹警官", color: "bg-orange-500", pos: "left-[80%] top-[25%]", img: "/assets/avatar-2.png" },
-  u3: { name: "结冰镇", char: "水牛局长", color: "bg-cyan-600", pos: "left-[30%] top-[35%]", img: "/assets/avatar-3.png" },
-  u4: { name: "小型啮齿动物城", char: "闪电", color: "bg-emerald-600", pos: "left-[70%] top-[45%]", img: "/assets/avatar-4.png" },
-  u5: { name: "雨林区", char: "本杰明市长", color: "bg-green-700", pos: "left-[20%] top-[55%]", img: "/assets/avatar-5.png" },
-  u6: { name: "运河区", char: "贝拉羊副市长", color: "bg-indigo-600", pos: "left-[60%] top-[65%]", img: "/assets/avatar-6.png" },
-  u7: { name: "神秘泉", char: "费尼克", color: "bg-purple-600", pos: "left-[85%] top-[75%]", img: "/assets/avatar-7.png" },
-  u8: { name: "兔窝镇", char: "冰小姐", color: "bg-pink-500", pos: "left-[45%] top-[85%]", img: "/assets/avatar-8.png" },
+  u1: { name: "哺乳动物大都会", char: "轰鸣警官", color: "bg-blue-600", pos: "left-[50%] top-[10%]", img: "/assets/avatar-1.jpg" },
+  u2: { name: "撒哈拉广场", char: "豹警官", color: "bg-orange-500", pos: "left-[80%] top-[25%]", img: "/assets/avatar-2.jpg" },
+  u3: { name: "结冰镇", char: "水牛局长", color: "bg-cyan-600", pos: "left-[30%] top-[35%]", img: "/assets/avatar-3.jpg" },
+  u4: { name: "小型啮齿动物城", char: "闪电", color: "bg-emerald-600", pos: "left-[70%] top-[45%]", img: "/assets/avatar-4.jpg" },
+  u5: { name: "雨林区", char: "本杰明市长", color: "bg-green-700", pos: "left-[20%] top-[55%]", img: "/assets/avatar-5.jpg" },
+  u6: { name: "运河区", char: "贝拉羊副市长", color: "bg-indigo-600", pos: "left-[60%] top-[65%]", img: "/assets/avatar-6.jpg" },
+  u7: { name: "神秘泉", char: "费尼克", color: "bg-purple-600", pos: "left-[85%] top-[75%]", img: "/assets/avatar-7.jpg" },
+  u8: { name: "兔窝镇", char: "冰小姐", color: "bg-pink-500", pos: "left-[45%] top-[85%]", img: "/assets/avatar-8.jpg" },
 };
 
 // Avatar Component
@@ -105,7 +105,7 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
         {/* Background Image */}
         <div className="absolute inset-0">
           <img 
-            src="/assets/zootopia-map-16x9.png" 
+            src="/assets/zootopia-map-16x9.jpg" 
             alt="Zootopia Map" 
             className="h-full w-full object-cover opacity-95"
           />
