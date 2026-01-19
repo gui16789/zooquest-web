@@ -111,6 +111,40 @@ function isAnswered(q: StoryQuestion, a: AnswerState | undefined): boolean {
   return typeof a.choice === "string" && a.choice.length > 0;
 }
 
+function getScenePrefix(sceneId: SceneId): string {
+  switch (sceneId) {
+    case "s1":
+      return "（甜甜圈摊位）";
+    case "s2":
+      return "（雨林区管道）";
+    case "s3":
+      return "（闪电档案室）";
+  }
+}
+
+function getStoryLine(sceneId: SceneId, question: StoryQuestion): string {
+  const prefix = getScenePrefix(sceneId);
+
+  switch (question.type) {
+    case "mcq_pinyin":
+      return `${prefix}【证物标签】“${question.hanzi}”该怎么读？读错就对不上证物。`;
+    case "mcq_hanzi_by_pinyin":
+      return `${prefix}【登记簿】听到拼音“${question.pinyin}”，应该是哪一个字？`;
+    case "mcq_polyphone":
+      return `${prefix}【口供比对】同一个字在不同句子读音不同，看看语境。`;
+    case "mcq_confusing":
+      return `${prefix}【拆穿伪证】选对词，才能识别谁在撒谎。`;
+    case "mcq_syn_ant":
+      return `${prefix}【线索对照】挑出最匹配的词，线索才能成立。`;
+    case "mcq_word_spelling":
+      return `${prefix}【证物匹配】拼音“${question.pinyin ?? ""}”对应的词是？`.replace(/“”/, "");
+    case "mcq_word_pattern_match":
+      return `${prefix}【关键词归档】找出符合词语结构的证物编号。`;
+    case "sentence_pattern_fill":
+      return `${prefix}【结案陈词】按句式补全，证据才能立得住。`;
+  }
+}
+
 const SCENE_ORDER: SceneId[] = ["s1", "s2", "s3"];
 
 export function CasePlayClient(props: { unitId: string; onExit: () => void; onBoss: () => void }) {
@@ -676,9 +710,13 @@ export function CasePlayClient(props: { unitId: string; onExit: () => void; onBo
           </div>
           
           <div className="relative">
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-3 flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded bg-zinc-900 text-xs font-bold text-white">Q</span>
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">{currentQuestion.taskLabel}</span>
+            </div>
+
+            <div className="mb-3 rounded-md bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-600">
+              {getStoryLine(sceneId, currentQuestion)}
             </div>
             
             <div className="text-lg font-medium leading-relaxed text-zinc-900">{currentQuestion.prompt}</div>
