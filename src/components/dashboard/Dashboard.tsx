@@ -22,97 +22,25 @@ type BadgeRow = {
   reason_event: string;
 };
 
-// 8 Zones Configuration as per approved design
-const ZOO_ZONES: Record<string, { name: string; char: string; color: string; pos: string }> = {
-  u1: { name: "哺乳动物大都会", char: "轰鸣警官", color: "bg-blue-600", pos: "left-[50%] top-[5%]" },
-  u2: { name: "撒哈拉广场", char: "豹警官", color: "bg-orange-500", pos: "left-[80%] top-[18%]" },
-  u3: { name: "结冰镇", char: "水牛局长", color: "bg-cyan-600", pos: "left-[30%] top-[30%]" },
-  u4: { name: "小型啮齿动物城", char: "闪电", color: "bg-emerald-600", pos: "left-[70%] top-[42%]" },
-  u5: { name: "雨林区", char: "本杰明市长", color: "bg-green-700", pos: "left-[20%] top-[55%]" },
-  u6: { name: "运河区", char: "贝拉羊副市长", color: "bg-indigo-600", pos: "left-[60%] top-[68%]" },
-  u7: { name: "神秘泉", char: "费尼克", color: "bg-purple-600", pos: "left-[80%] top-[80%]" },
-  u8: { name: "兔窝镇", char: "冰小姐", color: "bg-pink-500", pos: "left-[40%] top-[92%]" },
+// 8 Zones Configuration with Local Assets
+const ZOO_ZONES: Record<string, { name: string; char: string; color: string; pos: string; img: string }> = {
+  u1: { name: "哺乳动物大都会", char: "轰鸣警官", color: "bg-blue-600", pos: "left-[50%] top-[10%]", img: "/assets/avatar-1.png" },
+  u2: { name: "撒哈拉广场", char: "豹警官", color: "bg-orange-500", pos: "left-[80%] top-[25%]", img: "/assets/avatar-2.png" },
+  u3: { name: "结冰镇", char: "水牛局长", color: "bg-cyan-600", pos: "left-[30%] top-[35%]", img: "/assets/avatar-3.png" },
+  u4: { name: "小型啮齿动物城", char: "闪电", color: "bg-emerald-600", pos: "left-[70%] top-[45%]", img: "/assets/avatar-4.png" },
+  u5: { name: "雨林区", char: "本杰明市长", color: "bg-green-700", pos: "left-[20%] top-[55%]", img: "/assets/avatar-5.png" },
+  u6: { name: "运河区", char: "贝拉羊副市长", color: "bg-indigo-600", pos: "left-[60%] top-[65%]", img: "/assets/avatar-6.png" },
+  u7: { name: "神秘泉", char: "费尼克", color: "bg-purple-600", pos: "left-[85%] top-[75%]", img: "/assets/avatar-7.png" },
+  u8: { name: "兔窝镇", char: "冰小姐", color: "bg-pink-500", pos: "left-[45%] top-[85%]", img: "/assets/avatar-8.png" },
 };
 
-// Inline SVG Avatars (Simple Shapes)
-const CharAvatar = ({ char }: { char: string }) => {
-  switch (char) {
-    case "轰鸣警官": // Lion-ish
-      return (
-        <svg viewBox="0 0 24 24" className="h-full w-full fill-current">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 2L14 7H10L12 2Z" fill="white" /> {/* Mane spike */}
-          <circle cx="9" cy="11" r="1" fill="white" />
-          <circle cx="15" cy="11" r="1" fill="white" />
-          <path d="M10 16 Q12 18 14 16" stroke="white" strokeWidth="2" fill="none" />
-        </svg>
-      );
-    case "豹警官": // Round ears
-      return (
-        <svg viewBox="0 0 24 24" className="h-full w-full fill-current">
-          <circle cx="12" cy="12" r="10" />
-          <circle cx="6" cy="6" r="3" />
-          <circle cx="18" cy="6" r="3" />
-          <circle cx="9" cy="12" r="1" fill="white" />
-          <circle cx="15" cy="12" r="1" fill="white" />
-          <ellipse cx="12" cy="16" rx="2" ry="1" fill="white" />
-        </svg>
-      );
-    case "水牛局长": // Horns
-      return (
-        <svg viewBox="0 0 24 24" className="h-full w-full fill-current">
-           <path d="M2 6 Q6 12 10 10 L14 10 Q18 12 22 6" stroke="white" strokeWidth="3" fill="none" />
-           <rect x="6" y="8" width="12" height="12" rx="4" />
-           <circle cx="10" cy="13" r="1.5" fill="white" />
-           <circle cx="14" cy="13" r="1.5" fill="white" />
-        </svg>
-      );
-    case "闪电": // Sloth (Droopy eyes)
-      return (
-        <svg viewBox="0 0 24 24" className="h-full w-full fill-current">
-           <circle cx="12" cy="12" r="10" />
-           <path d="M7 12 Q9 10 11 12" stroke="white" strokeWidth="2" fill="none" />
-           <path d="M13 12 Q15 10 17 12" stroke="white" strokeWidth="2" fill="none" />
-           <path d="M10 17 Q12 18 14 17" stroke="white" strokeWidth="2" fill="none" />
-        </svg>
-      );
-    case "本杰明市长": // Suit/Tie
-      return (
-        <svg viewBox="0 0 24 24" className="h-full w-full fill-current">
-           <rect x="4" y="4" width="16" height="16" rx="2" />
-           <path d="M12 20 L12 12" stroke="white" strokeWidth="2" />
-           <path d="M8 12 L12 16 L16 12" stroke="white" strokeWidth="2" fill="none" />
-        </svg>
-      );
-    case "贝拉羊副市长": // Wool/Glasses
-      return (
-        <svg viewBox="0 0 24 24" className="h-full w-full fill-current">
-           <circle cx="12" cy="12" r="9" />
-           <circle cx="8" cy="11" r="3" stroke="white" strokeWidth="1.5" fill="none" />
-           <circle cx="16" cy="11" r="3" stroke="white" strokeWidth="1.5" fill="none" />
-           <path d="M12 11 L12 13" stroke="white" strokeWidth="1.5" />
-        </svg>
-      );
-    case "费尼克": // Big ears small face
-      return (
-        <svg viewBox="0 0 24 24" className="h-full w-full fill-current">
-           <path d="M4 2 L8 12 L12 14 L16 12 L20 2" fill="white" opacity="0.5" />
-           <circle cx="12" cy="16" r="6" />
-           <circle cx="10" cy="16" r="1" fill="white" />
-           <circle cx="14" cy="16" r="1" fill="white" />
-        </svg>
-      );
-    case "冰小姐": // Elegant
-      return (
-        <svg viewBox="0 0 24 24" className="h-full w-full fill-current">
-           <circle cx="12" cy="10" r="6" />
-           <path d="M6 22 L18 22 L12 10 Z" opacity="0.5" />
-           <circle cx="12" cy="8" r="1" fill="white" />
-        </svg>
-      );
-    default:
-      return <div className="h-full w-full rounded-full bg-gray-300" />;
-  }
+// Avatar Component
+const CharAvatar = ({ img, alt }: { img: string; alt: string }) => {
+  return (
+    <div className="h-full w-full overflow-hidden rounded-full bg-white">
+      <img src={img} alt={alt} className="h-full w-full object-cover" />
+    </div>
+  );
 };
 
 
@@ -173,23 +101,22 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
       </div>
 
       {/* Map Container */}
-      <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-3xl bg-blue-50/50 shadow-inner ring-4 ring-white">
-        {/* Winding Path SVG Background */}
-        <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-30" viewBox="0 0 100 100" preserveAspectRatio="none">
-           <path
-             d="M50 5 C 50 10, 80 10, 80 20 C 80 30, 30 25, 30 35 C 30 45, 70 40, 70 50 C 70 60, 20 55, 20 65 C 20 75, 60 70, 60 80 C 60 90, 80 85, 80 90 C 80 95, 40 90, 40 95"
-             fill="none"
-             stroke="#93c5fd"
-             strokeWidth="2"
-             strokeDasharray="4 4"
-           />
-        </svg>
+      <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl bg-blue-50 shadow-xl ring-4 ring-white">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="/assets/zootopia-map-16x9.png" 
+            alt="Zootopia Map" 
+            className="h-full w-full object-cover opacity-95"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-white/5" />
+        </div>
 
-        {/* Nodes Layer - Using specific aspect ratio container to keep map scalable */}
-        <div className="relative pb-[160%] sm:pb-[140%]"> 
+        {/* Nodes Layer - 16:9 Aspect Ratio */}
+        <div className="relative pb-[56.25%]"> 
           {LEVELS.map((level) => {
             const state = levelStates.get(level.unitId)!;
-            const zone = ZOO_ZONES[level.unitId] || { name: level.regionName, char: "Unknown", color: "bg-gray-500", pos: "left-1/2 top-1/2" };
+            const zone = ZOO_ZONES[level.unitId] || { name: level.regionName, char: "Unknown", color: "bg-gray-500", pos: "left-1/2 top-1/2", img: "/assets/avatar-1.png" };
             
             const totalStars = (state.regular?.stars ?? 0) + (state.boss?.stars ?? 0);
             
@@ -202,8 +129,8 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
                 <div className="group relative flex flex-col items-center">
                    {/* Avatar Bubble */}
                    <div className={`relative mb-2 flex h-16 w-16 items-center justify-center rounded-full border-4 border-white shadow-lg transition-transform hover:scale-110 ${zone.color} text-white`}>
-                      <div className="h-10 w-10">
-                        <CharAvatar char={zone.char} />
+                      <div className="h-full w-full p-0.5">
+                        <CharAvatar img={zone.img} alt={zone.char} />
                       </div>
                       {totalStars > 0 && (
                         <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-400 text-[10px] font-bold text-yellow-900 shadow-sm">
@@ -213,7 +140,7 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
                    </div>
 
                    {/* Card Info */}
-                   <div className="flex w-full flex-col items-center rounded-xl bg-white p-2 text-center shadow-md ring-1 ring-black/5 transition-all hover:ring-blue-400">
+                   <div className="flex w-full flex-col items-center rounded-xl bg-white/95 p-2 text-center shadow-md ring-1 ring-black/5 backdrop-blur-sm transition-all hover:ring-blue-400">
                       <div className="text-xs font-bold text-zinc-800">{zone.name}</div>
                       <div className="text-[10px] text-zinc-500">{zone.char}</div>
                       

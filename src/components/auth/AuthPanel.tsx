@@ -114,14 +114,12 @@ export function AuthPanel(props: { onAuthed: () => void }) {
           <div className="space-y-4">
              <div className="flex items-start gap-4 rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15">
                 <div className="shrink-0">
-                  {/* Judy SVG */}
-                  <svg width="48" height="48" viewBox="0 0 100 100" className="drop-shadow-md">
-                    <circle cx="50" cy="50" r="45" fill="#60a5fa" />
-                    <path d="M35 15 L35 45 M65 15 L65 45" stroke="#1e3a8a" strokeWidth="4" strokeLinecap="round" />
-                    <circle cx="35" cy="55" r="4" fill="#1e3a8a" />
-                    <circle cx="65" cy="55" r="4" fill="#1e3a8a" />
-                    <path d="M45 70 Q50 75 55 70" stroke="#1e3a8a" strokeWidth="3" fill="none" />
-                  </svg>
+                  {/* Judy Avatar */}
+                  <img
+                    src="/assets/avatar-judy.png"
+                    alt="朱迪"
+                    className="h-12 w-12 rounded-full object-cover shadow-md ring-2 ring-blue-300/50"
+                  />
                 </div>
                 <div>
                    <div className="text-sm font-bold text-blue-200">朱迪</div>
@@ -131,14 +129,12 @@ export function AuthPanel(props: { onAuthed: () => void }) {
 
              <div className="flex items-start gap-4 rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15">
                 <div className="shrink-0">
-                   {/* Nick SVG */}
-                   <svg width="48" height="48" viewBox="0 0 100 100" className="drop-shadow-md">
-                     <circle cx="50" cy="50" r="45" fill="#fb923c" />
-                     <path d="M25 25 L35 45 M75 25 L65 45" stroke="#9a3412" strokeWidth="4" strokeLinecap="round" />
-                     <path d="M30 55 L40 60 L30 65" fill="#9a3412" />
-                     <path d="M70 55 L60 60 L70 65" fill="#9a3412" />
-                     <path d="M40 75 Q50 80 60 75" stroke="#9a3412" strokeWidth="3" fill="none" />
-                   </svg>
+                   {/* Nick Avatar */}
+                   <img
+                     src="/assets/avatar-nick.png"
+                     alt="尼克"
+                     className="h-12 w-12 rounded-full object-cover shadow-md ring-2 ring-orange-300/50"
+                   />
                 </div>
                  <div>
                     <div className="text-sm font-bold text-orange-200">尼克</div>
