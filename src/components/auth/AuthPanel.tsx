@@ -116,7 +116,7 @@ export function AuthPanel(props: { onAuthed: () => void }) {
                 <div className="shrink-0">
                   {/* Judy Avatar */}
                   <img
-                    src="/assets/avatar-judy.png"
+                    src="/assets/avatar-judy.jpg"
                     alt="朱迪"
                     className="h-12 w-12 rounded-full object-cover shadow-md ring-2 ring-blue-300/50"
                   />
@@ -130,11 +130,11 @@ export function AuthPanel(props: { onAuthed: () => void }) {
              <div className="flex items-start gap-4 rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15">
                 <div className="shrink-0">
                    {/* Nick Avatar */}
-                   <img
-                     src="/assets/avatar-nick.png"
-                     alt="尼克"
-                     className="h-12 w-12 rounded-full object-cover shadow-md ring-2 ring-orange-300/50"
-                   />
+                    <img
+                      src="/assets/avatar-nick.jpg"
+                      alt="尼克"
+                      className="h-12 w-12 rounded-full object-cover shadow-md ring-2 ring-orange-300/50"
+                    />
                 </div>
                  <div>
                     <div className="text-sm font-bold text-orange-200">尼克</div>
