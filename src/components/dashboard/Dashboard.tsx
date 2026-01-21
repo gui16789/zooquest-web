@@ -5,8 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { getBadgeMeta } from "@/domain/badges/catalog";
+import type { LevelId } from "@/domain/levels/levels";
 import { LEVELS } from "@/domain/levels/levels";
 import { computeLevelState } from "@/domain/levels/state";
+import { BadgeModal } from "@/components/dashboard/BadgeModal";
 
 type ProgressRow = {
   level_id: string;
@@ -21,6 +23,18 @@ type BadgeRow = {
   awarded_at: string;
   reason_event: string;
 };
+
+type Growth = {
+  xp: number;
+  level: number;
+  title: string;
+  updatedAt: string | null;
+};
+
+type BadgeState =
+  | { status: "unlocked"; earnedAt: string }
+  | { status: "kp_disabled" }
+  | { status: "locked"; progress: { current: number; target: number; label: string } };
 
 // 8 Zones Configuration with Local Assets
 const ZOO_ZONES: Record<string, { name: string; char: string; color: string; pos: string; img: string }> = {
@@ -43,11 +57,27 @@ const CharAvatar = ({ img, alt }: { img: string; alt: string }) => {
   );
 };
 
+// v1 (25 badges): clear(8) + boss_clear(8) + growth_lv(4) + persistence(2) + kp_coverage(3)
+const ALL_BADGES = [
+  ...LEVELS.map((l) => `clear_${l.unitId}`),
+  ...LEVELS.map((l) => `boss_${l.unitId}_clear`),
+  "growth_lv2",
+  "growth_lv3",
+  "growth_lv4",
+  "growth_lv5",
+  "persistence_fails_5",
+  "persistence_fails_10",
+  "kp_coverage_60",
+  "kp_coverage_85",
+  "kp_coverage_100",
+] as const;
 
 export function Dashboard(props: { nickname: string; onLogout: () => void }) {
   const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [badges, setBadges] = useState<BadgeRow[]>([]);
+  const [growth, setGrowth] = useState<Growth | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
 
   async function reload() {
     setLoading(true);
@@ -57,6 +87,7 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
       if (json.ok) {
         setProgress(json.data.progress);
         setBadges(json.data.badges);
+        setGrowth(json.data.growth ?? null);
       }
     } finally {
       setLoading(false);
@@ -70,6 +101,68 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
   const levelStates = useMemo(() => {
     return new Map(LEVELS.map((l) => [l.unitId, computeLevelState(l.unitId, progress)]));
   }, [progress]);
+
+  const getBadgeState = (badgeId: string): BadgeState => {
+    const earned = badges.find((b) => b.badge_id === badgeId);
+    if (earned) {
+      return { status: "unlocked", earnedAt: earned.awarded_at };
+    }
+    
+    // KP badges: show disabled (KP tables might not exist)
+    if (badgeId.startsWith("kp_")) return { status: "kp_disabled" };
+
+    // Calculate Progress for Locked
+    let current = 0;
+    let target = 0;
+    let label = "";
+
+    // Parse ID
+    const mClear = badgeId.match(/^clear_(u[1-8])$/);
+    const mBossClear = badgeId.match(/^boss_(u[1-8])_clear$/);
+    
+    if (mClear) {
+      const s = levelStates.get(mClear[1] as LevelId)?.regular?.stars ?? 0;
+      current = s;
+      target = 2;
+      label = "普通关需获2星";
+    } else if (mBossClear) {
+      const s = levelStates.get(mBossClear[1] as LevelId)?.boss?.stars ?? 0;
+      current = s;
+      target = 2;
+      label = "Boss关需获2星";
+    } else if (badgeId === "growth_lv2") {
+      current = growth?.level ?? 1;
+      target = 2;
+      label = "成长到 Lv.2";
+    } else if (badgeId === "growth_lv3") {
+      current = growth?.level ?? 1;
+      target = 3;
+      label = "成长到 Lv.3";
+    } else if (badgeId === "growth_lv4") {
+      current = growth?.level ?? 1;
+      target = 4;
+      label = "成长到 Lv.4";
+    } else if (badgeId === "growth_lv5") {
+      current = growth?.level ?? 1;
+      target = 5;
+      label = "成长到 Lv.5";
+    } else if (badgeId === "persistence_fails_5") {
+      const totalFails = progress.reduce((acc, p) => acc + p.fails, 0);
+      current = totalFails;
+      target = 5;
+      label = "累计失败次数";
+    } else if (badgeId === "persistence_fails_10") {
+      const totalFails = progress.reduce((acc, p) => acc + p.fails, 0);
+      current = totalFails;
+      target = 10;
+      label = "累计失败次数";
+    }
+
+    return { status: "locked", progress: { current, target, label } };
+  };
+
+  const selectedMeta = selectedBadgeId ? getBadgeMeta(selectedBadgeId) : null;
+  const selectedState = selectedBadgeId ? getBadgeState(selectedBadgeId) : null;
 
   return (
     <div className="w-full space-y-8">
@@ -173,49 +266,87 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
       </div>
 
       {/* Badges Section */}
-      <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
-        <div className="mb-4 flex items-center gap-2 border-b border-zinc-100 pb-2">
-          <span className="text-lg font-bold text-zinc-900">警员荣誉墙 (MVP)</span>
-          <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
-            {badges.length} 枚
-          </span>
+      <div className="rounded-3xl bg-white p-8 shadow-xl ring-1 ring-zinc-100">
+        <div className="mb-6 flex items-center justify-between border-b border-zinc-100 pb-4">
+          <div className="flex items-center gap-3">
+             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+             </div>
+             <div>
+                <h2 className="text-lg font-black tracking-tight text-zinc-900">警员荣誉档案</h2>
+                <p className="text-xs text-zinc-500">
+                  已收集 {ALL_BADGES.filter((id) => badges.some((b) => b.badge_id === id)).length} / {ALL_BADGES.length} 枚勋章
+                </p>
+             </div>
+          </div>
         </div>
         
         {loading ? (
-          <div className="py-8 text-center text-sm text-zinc-500">加载档案中...</div>
-        ) : badges.length === 0 ? (
-          <div className="py-8 text-center text-sm text-zinc-500">
-            还没有获得荣誉勋章，快去挑战关卡吧！
-          </div>
+          <div className="py-12 text-center text-sm font-medium text-zinc-400 animate-pulse">正在同步档案数据...</div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-            {badges.map((b) => {
-              const meta = getBadgeMeta(b.badge_id);
+          <div className="grid grid-cols-3 gap-4 min-[480px]:grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
+            {ALL_BADGES.map((badgeId) => {
+              const meta = getBadgeMeta(badgeId);
+              const state = getBadgeState(badgeId);
+              const isLocked = state.status === "locked";
+              const isKpDisabled = state.status === "kp_disabled";
+
               return (
-                <div key={b.badge_id} className="group relative flex flex-col items-center gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-3 transition-all hover:bg-white hover:shadow-md">
-                  <div className="relative h-12 w-12 transition-transform group-hover:scale-110">
+                <button
+                  key={badgeId}
+                  onClick={() => setSelectedBadgeId(badgeId)}
+                  className={`group relative flex flex-col items-center gap-2 rounded-2xl p-2 transition-all duration-300 hover:scale-105 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20
+                    ${isLocked || isKpDisabled ? "opacity-70 grayscale-[0.8]" : "opacity-100 shadow-sm ring-1 ring-zinc-100"}
+                  `}
+                >
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl">
                     <img
                       src={meta.assetPath}
                       alt={meta.name}
-                      className="h-full w-full object-contain"
+                      className={`h-full w-full object-contain transition-all duration-500 ${isLocked || isKpDisabled ? "scale-90 opacity-60" : "group-hover:scale-110 drop-shadow-md"}`}
                       onError={(e) => {
                         e.currentTarget.src = meta.fallbackAssetPath;
                       }}
                     />
+                    {isLocked && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/5 backdrop-blur-[1px]">
+                         <div className="rounded-full bg-white/80 p-1.5 shadow-sm">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                         </div>
+                      </div>
+                    )}
+                    {isKpDisabled && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-zinc-100/50 backdrop-blur-[2px]">
+                         <span className="rounded-md bg-zinc-800 px-1.5 py-0.5 text-[8px] font-bold text-white">
+                           KP待开启
+                         </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-center">
-                    <div className="text-xs font-bold text-zinc-900">{meta.name}</div>
-                    <div className="mt-0.5 text-[10px] text-zinc-400">
-                      {new Date(b.awarded_at).toLocaleDateString()}
+                  <div className="w-full text-center">
+                    <div className="truncate text-[10px] font-bold text-zinc-700 group-hover:text-zinc-900">
+                      {meta.name.replace(/\(.*\)/, '')}
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      {selectedBadgeId && selectedMeta && selectedState && (
+        <BadgeModal 
+          isOpen={!!selectedBadgeId}
+          onClose={() => setSelectedBadgeId(null)}
+          meta={selectedMeta}
+          isOwned={selectedState.status === "unlocked"}
+          awardedAt={selectedState.status === "unlocked" ? selectedState.earnedAt : undefined}
+          progress={selectedState.status === "locked" ? selectedState.progress : undefined}
+          specialState={selectedState.status === "kp_disabled" ? "KP_DISABLED" : undefined}
+        />
+      )}
     </div>
   );
 }
-
