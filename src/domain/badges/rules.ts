@@ -35,3 +35,17 @@ export function computeBadgeAwards(ctx: BadgeContext): BadgeAward[] {
 
   return awards;
 }
+
+export function computeGrowthBadgeAwards(input: { level: number; xp: number }): BadgeAward[] {
+  const awards: BadgeAward[] = [];
+
+  if (input.level >= 2) awards.push({ badgeId: "growth_lv2", reasonEvent: "GROWTH_LV2" });
+  if (input.level >= 3) awards.push({ badgeId: "growth_lv3", reasonEvent: "GROWTH_LV3" });
+  if (input.level >= 4) awards.push({ badgeId: "growth_lv4", reasonEvent: "GROWTH_LV4" });
+  if (input.level >= 5) awards.push({ badgeId: "growth_lv5", reasonEvent: "GROWTH_LV5" });
+
+  // KP coverage badges are intentionally NOT awarded here in v1.
+  // They depend on kp_stats tables being present and a coverage calculation.
+
+  return awards;
+}

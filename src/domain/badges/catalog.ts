@@ -13,6 +13,76 @@ const FALLBACK_ASSET = "/badges/badge-placeholder.svg";
 export function getBadgeMeta(badgeId: string): BadgeMeta {
   const assetPath = `/badges/badge-${badgeId}.png`;
 
+  if (badgeId === "growth_lv2") {
+    return {
+      badgeId,
+      name: "见习探员",
+      description: "成长到 Lv.2。",
+      assetPath,
+      fallbackAssetPath: FALLBACK_ASSET,
+    };
+  }
+
+  if (badgeId === "growth_lv3") {
+    return {
+      badgeId,
+      name: "正式探员",
+      description: "成长到 Lv.3。",
+      assetPath,
+      fallbackAssetPath: FALLBACK_ASSET,
+    };
+  }
+
+  if (badgeId === "growth_lv4") {
+    return {
+      badgeId,
+      name: "高级探员",
+      description: "成长到 Lv.4。",
+      assetPath,
+      fallbackAssetPath: FALLBACK_ASSET,
+    };
+  }
+
+  if (badgeId === "growth_lv5") {
+    return {
+      badgeId,
+      name: "王牌探员",
+      description: "成长到 Lv.5。",
+      assetPath,
+      fallbackAssetPath: FALLBACK_ASSET,
+    };
+  }
+
+  if (badgeId === "kp_coverage_60") {
+    return {
+      badgeId,
+      name: "线索收集者",
+      description: "知识点覆盖率达到 60%（需要 KP 统计表）。",
+      assetPath,
+      fallbackAssetPath: FALLBACK_ASSET,
+    };
+  }
+
+  if (badgeId === "kp_coverage_85") {
+    return {
+      badgeId,
+      name: "案卷完整",
+      description: "知识点覆盖率达到 85%（需要 KP 统计表）。",
+      assetPath,
+      fallbackAssetPath: FALLBACK_ASSET,
+    };
+  }
+
+  if (badgeId === "kp_coverage_100") {
+    return {
+      badgeId,
+      name: "证据链闭环",
+      description: "知识点覆盖率达到 100%（需要 KP 统计表）。",
+      assetPath,
+      fallbackAssetPath: FALLBACK_ASSET,
+    };
+  }
+
   if (badgeId === "persistence_fails_5") {
     return {
       badgeId,

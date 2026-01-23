@@ -4,6 +4,7 @@ import { jsonError, jsonOk } from "@/lib/api";
 import { getAuthedUser } from "@/infra/auth/session";
 import { getSupabaseAdmin } from "@/infra/supabaseAdmin";
 import { getContent } from "@/infra/content/localContent";
+import { computeGrowthBadgeAwards } from "@/domain/badges/rules";
 import { generateRun } from "@/domain/questions/generate";
 import { gradeRun } from "@/domain/questions/grade";
 import type { Answer, Question } from "@/domain/questions/types";
@@ -190,6 +191,23 @@ export async function POST(req: Request) {
           leveledUp,
           xpGained,
         };
+
+        // Growth badges (best-effort)
+        try {
+          const awards = computeGrowthBadgeAwards({ level: nextLevel, xp: nextXp });
+          if (awards.length > 0) {
+            await supabase.from("badge_awards").upsert(
+              awards.map((a) => ({
+                kid_user_id: user.kidUserId,
+                badge_id: a.badgeId,
+                reason_event: a.reasonEvent,
+              })),
+              { onConflict: "kid_user_id,badge_id" },
+            );
+          }
+        } catch {
+          // ignore
+        }
       }
     } catch {
       // ignore

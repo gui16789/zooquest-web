@@ -5,6 +5,13 @@ export type BadgeId =
   | `star3_${UnitId}`
   | `boss_${UnitId}_clear`
   | `boss_${UnitId}_star3`
+  | "growth_lv2"
+  | "growth_lv3"
+  | "growth_lv4"
+  | "growth_lv5"
+  | "kp_coverage_60"
+  | "kp_coverage_85"
+  | "kp_coverage_100"
   | "persistence_fails_5"
   | "persistence_fails_10";
 
