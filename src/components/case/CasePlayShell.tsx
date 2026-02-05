@@ -9,7 +9,7 @@ export function CasePlayShell(props: { unitId: string }) {
   return (
     <CasePlayClient
       unitId={props.unitId}
-      onExit={() => router.push("/")}
+      onExit={() => router.push("/dashboard")}
       onBoss={() => router.push(`/boss/${props.unitId}`)}
     />
   );
