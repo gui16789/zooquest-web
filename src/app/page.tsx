@@ -80,7 +80,7 @@ export default async function Home() {
             <div 
               className="absolute inset-0 w-full h-full bg-cover bg-center"
               style={{ 
-                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuABLSZhX6KTDEKRikemNqbnTYccPlhZJSyBfEGAJNsL2CLd5oL34WUFdIQIkOL1VoDM08w1qqzu1KjfcoSQEHa6MqDeOkgAqtMe5pjmckLnf3_aDAFBzW5VyJv_nUnnjzH39FG_p9OwzcFWAew9TaFgJUgIUbPu1DtE2rT9CefIKTEKy71lYMs4qkUo4PoInsu_x2a-ed095T9-3zelF1an909tsDtqH_Bs3KTcYpyqq9kGrEtwB738GCIwHWiYsBV4SKP57reuaKyU")'
+                backgroundImage: 'url("/images/hero-banner.jpg")'
               }}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
@@ -165,11 +165,11 @@ export default async function Home() {
                       <div
                         className="absolute inset-0 bg-cover bg-center transform group-hover:scale-105 transition-transform duration-700"
                         style={{
-                          backgroundImage: squad.id === 'chinese' 
-                            ? 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDLKx_ozMDkw4NxGtraODMxUsZHG8yJEbOyPgPGHwK49TsEdslgUIbElmBpbxsYBV1OWtITl0qd9IWfELEq58DOn7DDFnPbkmvqfvk3UkyEIrA_IDWlIwUWokuuRqB_DkchzMS1DcXXC6zHRXFzLN37VkkuQKksZRtoeGcKZND_-yjssBDCZ3I6rKwpSpr7tRa5JflrbAD_iRZZo3PxfMZ4OV__kekZmFffd_-goyJx5De_C1Xl0qR2Na0TZrH5z0NcpHhKws7oJ-jK")'
+                          backgroundImage: squad.id === 'chinese'
+                            ? 'url("/images/squad-chinese.jpg")'
                             : squad.id === 'math'
-                            ? 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCbNJnyj6-93mWgf9n9kZ65FkKRO8UTMVTqOOySgb-RbdO0vpCMzDLgfnFQTXS1HMPeTsniRi4Yjl_3IL0xmUuG0HSRgkztqFwkAoFq40e8jUZwTXB-I04KZiEwlciXGLYFQCxQ9-TNI9HtzH4C-7BOpZ_6gbYHJ7lrgKZ16z2stw0rWHsYcrRqJo1fjXkDU0yxDap_YTKyKVYXnQ-KBNlWQu_eNrLMa6OSWdRB8pRm_YkMyEe6-NTFQn8ZMrSbKEyCyO_eh5bRQmn4")'
-                            : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCgseImS3-db0NaOUav3ItOOFzDbQvM2yfF1CYpPxV2IhpdxZ_VCQboeyKMzsFt1GrBi1qrZ-0TbyYNlEI6lZ6OFP3XR-juXoEupHrYVQfFrUWqVMrlF67AF9-7Rp0_9yBb4tCCjVLb2dW_4fl5fA-Qwq0fV6vCmJmA05oO-fmX7Rcyl5HKvvEp1zur1-_d3AsebtKai7fKo_Wt8Bxtw59wOPexSQvchwXn2pbL43qUOoDpmdfuXtMtOw-OAa70iox1Iamw9C55sXyB")'
+                            ? 'url("/images/squad-math.jpg")'
+                            : 'url("/images/squad-english.jpg")'
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
