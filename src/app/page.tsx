@@ -76,13 +76,14 @@ export default async function Home() {
         {/* Hero Section */}
         <div className="relative w-full px-4 sm:px-6 py-6 lg:py-10 flex justify-center">
           <div className="w-full max-w-7xl rounded-3xl overflow-hidden relative min-h-[500px] flex items-center justify-center text-center shadow-2xl">
-            {/* Background with gradient */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500">
+            {/* Background with Image */}
+            <div 
+              className="absolute inset-0 w-full h-full bg-cover bg-center"
+              style={{ 
+                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuABLSZhX6KTDEKRikemNqbnTYccPlhZJSyBfEGAJNsL2CLd5oL34WUFdIQIkOL1VoDM08w1qqzu1KjfcoSQEHa6MqDeOkgAqtMe5pjmckLnf3_aDAFBzW5VyJv_nUnnjzH39FG_p9OwzcFWAew9TaFgJUgIUbPu1DtE2rT9CefIKTEKy71lYMs4qkUo4PoInsu_x2a-ed095T9-3zelF1an909tsDtqH_Bs3KTcYpyqq9kGrEtwB738GCIwHWiYsBV4SKP57reuaKyU")'
+              }}
+            >
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
-              {/* Decorative circles */}
-              <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute bottom-20 right-20 w-48 h-48 bg-blue-400/20 rounded-full blur-3xl" />
-              <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-purple-400/20 rounded-full blur-2xl" />
             </div>
 
             <div className="relative z-10 p-6 flex flex-col items-center max-w-3xl">
@@ -159,10 +160,17 @@ export default async function Home() {
                       </span>
                     </div>
 
-                    {/* Image Area with Gradient */}
+                    {/* Image Area with Character Image */}
                     <div className="w-full aspect-[4/3] overflow-hidden relative">
                       <div
-                        className={`absolute inset-0 bg-gradient-to-br ${squad.gradient} transform group-hover:scale-105 transition-transform duration-700`}
+                        className="absolute inset-0 bg-cover bg-center transform group-hover:scale-105 transition-transform duration-700"
+                        style={{
+                          backgroundImage: squad.id === 'chinese' 
+                            ? 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDLKx_ozMDkw4NxGtraODMxUsZHG8yJEbOyPgPGHwK49TsEdslgUIbElmBpbxsYBV1OWtITl0qd9IWfELEq58DOn7DDFnPbkmvqfvk3UkyEIrA_IDWlIwUWokuuRqB_DkchzMS1DcXXC6zHRXFzLN37VkkuQKksZRtoeGcKZND_-yjssBDCZ3I6rKwpSpr7tRa5JflrbAD_iRZZo3PxfMZ4OV__kekZmFffd_-goyJx5De_C1Xl0qR2Na0TZrH5z0NcpHhKws7oJ-jK")'
+                            : squad.id === 'math'
+                            ? 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCbNJnyj6-93mWgf9n9kZ65FkKRO8UTMVTqOOySgb-RbdO0vpCMzDLgfnFQTXS1HMPeTsniRi4Yjl_3IL0xmUuG0HSRgkztqFwkAoFq40e8jUZwTXB-I04KZiEwlciXGLYFQCxQ9-TNI9HtzH4C-7BOpZ_6gbYHJ7lrgKZ16z2stw0rWHsYcrRqJo1fjXkDU0yxDap_YTKyKVYXnQ-KBNlWQu_eNrLMa6OSWdRB8pRm_YkMyEe6-NTFQn8ZMrSbKEyCyO_eh5bRQmn4")'
+                            : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCgseImS3-db0NaOUav3ItOOFzDbQvM2yfF1CYpPxV2IhpdxZ_VCQboeyKMzsFt1GrBi1qrZ-0TbyYNlEI6lZ6OFP3XR-juXoEupHrYVQfFrUWqVMrlF67AF9-7Rp0_9yBb4tCCjVLb2dW_4fl5fA-Qwq0fV6vCmJmA05oO-fmX7Rcyl5HKvvEp1zur1-_d3AsebtKai7fKo_Wt8Bxtw59wOPexSQvchwXn2pbL43qUOoDpmdfuXtMtOw-OAa70iox1Iamw9C55sXyB")'
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
                       
