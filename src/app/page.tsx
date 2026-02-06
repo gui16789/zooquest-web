@@ -76,13 +76,14 @@ export default async function Home() {
         {/* Hero Section */}
         <div className="relative w-full px-4 sm:px-6 py-6 lg:py-10 flex justify-center">
           <div className="w-full max-w-7xl rounded-3xl overflow-hidden relative min-h-[500px] flex items-center justify-center text-center shadow-2xl">
-            {/* Background with gradient */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500">
+            {/* Background with Image */}
+            <div 
+              className="absolute inset-0 w-full h-full bg-cover bg-center"
+              style={{ 
+                backgroundImage: 'url("/images/hero-banner.jpg")'
+              }}
+            >
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
-              {/* Decorative circles */}
-              <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute bottom-20 right-20 w-48 h-48 bg-blue-400/20 rounded-full blur-3xl" />
-              <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-purple-400/20 rounded-full blur-2xl" />
             </div>
 
             <div className="relative z-10 p-6 flex flex-col items-center max-w-3xl">
@@ -159,10 +160,17 @@ export default async function Home() {
                       </span>
                     </div>
 
-                    {/* Image Area with Gradient */}
+                    {/* Image Area with Character Image */}
                     <div className="w-full aspect-[4/3] overflow-hidden relative">
                       <div
-                        className={`absolute inset-0 bg-gradient-to-br ${squad.gradient} transform group-hover:scale-105 transition-transform duration-700`}
+                        className="absolute inset-0 bg-cover bg-center transform group-hover:scale-105 transition-transform duration-700"
+                        style={{
+                          backgroundImage: squad.id === 'chinese'
+                            ? 'url("/images/squad-chinese.jpg")'
+                            : squad.id === 'math'
+                            ? 'url("/images/squad-math.jpg")'
+                            : 'url("/images/squad-english.jpg")'
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
                       
