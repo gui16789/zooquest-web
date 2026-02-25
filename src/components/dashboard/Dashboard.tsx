@@ -204,6 +204,13 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
             <span className="material-symbols-outlined text-[18px]">military_tech</span>
             勋章
           </Link>
+          <Link
+            href="/pending"
+            className="inline-flex items-center gap-1 rounded-lg px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <span className="material-symbols-outlined text-[18px]">pending_actions</span>
+            待办
+          </Link>
           <Button type="button" variant="ghost" onClick={() => void reload()}>
             刷新
           </Button>
