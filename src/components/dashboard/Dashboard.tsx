@@ -176,6 +176,20 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
           <div className="text-xs text-zinc-400">完成任务，收集勋章，守护城市和平</div>
         </div>
         <div className="flex gap-2">
+          <Link
+            href="/report"
+            className="inline-flex items-center gap-1 rounded-lg px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <span className="material-symbols-outlined text-[18px]">assessment</span>
+            报告
+          </Link>
+          <Link
+            href="/medals"
+            className="inline-flex items-center gap-1 rounded-lg px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <span className="material-symbols-outlined text-[18px]">military_tech</span>
+            勋章
+          </Link>
           <Button type="button" variant="ghost" onClick={() => void reload()}>
             刷新
           </Button>
