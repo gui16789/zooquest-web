@@ -86,7 +86,7 @@ export function ReportView(props: {
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard"
+            href="/map"
             className="inline-flex items-center gap-1 rounded-lg border border-[#2f3e5f] px-3 py-2 text-sm text-slate-300 hover:bg-[#1a2332]"
           >
             <span className="material-symbols-outlined text-[18px]">map</span>
@@ -216,7 +216,7 @@ export function ReportView(props: {
 
         <section className="flex flex-col items-center justify-center gap-4 pb-6 sm:flex-row">
           <Link
-            href="/dashboard"
+            href="/map"
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-600 px-8 py-3.5 font-bold text-white transition-all hover:border-slate-400 hover:bg-white/5 sm:w-auto"
           >
             <span className="material-symbols-outlined text-[18px]">arrow_back</span>
