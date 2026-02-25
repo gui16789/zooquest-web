@@ -77,6 +77,13 @@ export function MapView(props: {
           </div>
           <div className="flex items-center gap-2">
             <Link
+              href="/handbook"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <span className="material-symbols-outlined text-[18px]">menu_book</span>
+              手册
+            </Link>
+            <Link
               href="/report"
               className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
@@ -135,6 +142,13 @@ export function MapView(props: {
               >
                 <span className="material-symbols-outlined">assessment</span>
                 <p className="text-sm font-medium">战斗报告</p>
+              </Link>
+              <Link
+                href="/handbook"
+                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <span className="material-symbols-outlined">menu_book</span>
+                <p className="text-sm font-medium">成长手册</p>
               </Link>
               <Link
                 href="/medals"

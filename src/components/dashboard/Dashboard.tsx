@@ -191,6 +191,13 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
             报告
           </Link>
           <Link
+            href="/handbook"
+            className="inline-flex items-center gap-1 rounded-lg px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <span className="material-symbols-outlined text-[18px]">menu_book</span>
+            手册
+          </Link>
+          <Link
             href="/medals"
             className="inline-flex items-center gap-1 rounded-lg px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
