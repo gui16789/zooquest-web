@@ -166,7 +166,7 @@ export function MedalsView(props: {
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="/dashboard"
+            href="/map"
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-6 py-3 font-bold text-slate-700 transition hover:bg-white sm:w-auto"
           >
             <span className="material-symbols-outlined text-[18px]">map</span>

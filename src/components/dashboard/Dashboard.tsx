@@ -177,11 +177,25 @@ export function Dashboard(props: { nickname: string; onLogout: () => void }) {
         </div>
         <div className="flex gap-2">
           <Link
+            href="/map"
+            className="inline-flex items-center gap-1 rounded-lg px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <span className="material-symbols-outlined text-[18px]">map</span>
+            地图
+          </Link>
+          <Link
             href="/report"
             className="inline-flex items-center gap-1 rounded-lg px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
             <span className="material-symbols-outlined text-[18px]">assessment</span>
             报告
+          </Link>
+          <Link
+            href="/handbook"
+            className="inline-flex items-center gap-1 rounded-lg px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <span className="material-symbols-outlined text-[18px]">menu_book</span>
+            手册
           </Link>
           <Link
             href="/medals"
