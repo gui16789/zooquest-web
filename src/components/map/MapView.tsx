@@ -97,6 +97,13 @@ export function MapView(props: {
               <span className="material-symbols-outlined text-[18px]">military_tech</span>
               勋章
             </Link>
+            <Link
+              href="/pending"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <span className="material-symbols-outlined text-[18px]">pending_actions</span>
+              待办
+            </Link>
           </div>
         </div>
       </header>
@@ -156,6 +163,13 @@ export function MapView(props: {
               >
                 <span className="material-symbols-outlined">military_tech</span>
                 <p className="text-sm font-medium">勋章墙</p>
+              </Link>
+              <Link
+                href="/pending"
+                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <span className="material-symbols-outlined">pending_actions</span>
+                <p className="text-sm font-medium">待办案件</p>
               </Link>
             </div>
           </div>

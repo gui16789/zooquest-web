@@ -78,6 +78,13 @@ export function HandbookView(props: {
             <span className="material-symbols-outlined text-[18px]">military_tech</span>
             勋章
           </Link>
+          <Link
+            href="/pending"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <span className="material-symbols-outlined text-[18px]">pending_actions</span>
+            待办
+          </Link>
         </div>
       </header>
 

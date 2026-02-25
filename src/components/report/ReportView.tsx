@@ -99,6 +99,20 @@ export function ReportView(props: {
             <span className="material-symbols-outlined text-[18px]">military_tech</span>
             勋章
           </Link>
+          <Link
+            href="/handbook"
+            className="inline-flex items-center gap-1 rounded-lg border border-[#2f3e5f] px-3 py-2 text-sm text-slate-300 hover:bg-[#1a2332]"
+          >
+            <span className="material-symbols-outlined text-[18px]">menu_book</span>
+            手册
+          </Link>
+          <Link
+            href="/pending"
+            className="inline-flex items-center gap-1 rounded-lg border border-[#2f3e5f] px-3 py-2 text-sm text-slate-300 hover:bg-[#1a2332]"
+          >
+            <span className="material-symbols-outlined text-[18px]">pending_actions</span>
+            待办
+          </Link>
         </div>
       </header>
 

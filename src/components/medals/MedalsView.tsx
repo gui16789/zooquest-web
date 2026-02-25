@@ -179,6 +179,13 @@ export function MedalsView(props: {
             <span className="material-symbols-outlined text-[18px]">assessment</span>
             查看报告
           </Link>
+          <Link
+            href="/pending"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-6 py-3 font-bold text-slate-700 transition hover:bg-white sm:w-auto"
+          >
+            <span className="material-symbols-outlined text-[18px]">pending_actions</span>
+            待办案件
+          </Link>
         </div>
       </div>
     </div>
