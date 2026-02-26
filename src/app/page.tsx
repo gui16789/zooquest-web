@@ -45,7 +45,7 @@ export default async function Home() {
   const user = await getAuthedUser();
 
   if (user) {
-    redirect("/dashboard");
+    redirect("/map");
   }
 
   return (

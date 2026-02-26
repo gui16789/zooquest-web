@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Shield, Badge, Lock, Fingerprint, HelpCircle, ArrowLeft, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 
 type Candidate = { userId: string; avatarId: number; createdAt: string };
 
@@ -25,7 +24,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   function onAuthed() {
-    window.location.href = "/dashboard";
+    window.location.href = "/map";
   }
 
   async function prelogin() {
