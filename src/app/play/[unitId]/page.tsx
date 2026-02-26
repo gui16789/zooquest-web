@@ -10,7 +10,7 @@ export default async function PlayPage(props: { params: Promise<{ unitId: string
   if (!user) redirect("/");
 
   const { unitId } = await props.params;
-  if (!/^u[1-8]$/.test(unitId)) redirect("/dashboard");
+  if (!/^u[1-8]$/.test(unitId)) redirect("/map");
 
   // Unit 1 MVP: story-mode case flow.
   if (unitId === "u1") redirect(`/case/${unitId}`);

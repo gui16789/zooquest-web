@@ -10,7 +10,7 @@ export default async function BossPage(props: { params: Promise<{ unitId: string
   if (!user) redirect("/");
 
   const { unitId } = await props.params;
-  if (!/^u[1-8]$/.test(unitId)) redirect("/dashboard");
+  if (!/^u[1-8]$/.test(unitId)) redirect("/map");
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-zinc-50 p-6">
